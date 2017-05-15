@@ -22,29 +22,39 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="1"/>
             <TextView
                 android:id="@+id/enemyTextView2"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="2"/>
             <TextView
                 android:id="@+id/enemyTextView3"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="3"/>
             <TextView
                 android:id="@+id/enemyTextView4"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="4"/>
             <TextView
                 android:layout_weight="2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="Score"/>
         </LinearLayout>
         <LinearLayout
@@ -58,29 +68,39 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="5"/>
             <TextView
                 android:id="@+id/enemyTextView6"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="6"/>
             <TextView
                 android:id="@+id/enemyTextView7"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="7"/>
             <TextView
                 android:id="@+id/enemyTextView8"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="8"/>
             <TextView
                 android:layout_weight="2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="64"/>
         </LinearLayout>
         <LinearLayout
@@ -94,29 +114,39 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="9"/>
             <TextView
                 android:id="@+id/enemyTextView10"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="10"/>
             <TextView
                 android:id="@+id/enemyTextView11"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="11"/>
             <TextView
                 android:id="@+id/enemyTextView12"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="12"/>
             <TextView
                 android:layout_weight="2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="Count"/>
         </LinearLayout>
         <LinearLayout
@@ -130,29 +160,39 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="13"/>
             <TextView
                 android:id="@+id/enemyTextView14"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="14"/>
             <TextView
                 android:id="@+id/enemyTextView15"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="15"/>
             <TextView
                 android:id="@+id/enemyTextView16"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="16"/>
             <TextView
                 android:layout_weight="2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="17"/>
         </LinearLayout>
     </LinearLayout>
@@ -179,12 +219,14 @@
                 android:layout_weight="1"
                 android:layout_height="0dp"
                 android:textAlignment="center"
+                android:gravity="center"
                 android:text="Enemy View ↑"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_weight="1"
                 android:layout_height="0dp"
                 android:textAlignment="center"
+                android:gravity="center"
                 android:text="My View ↓"/>
         </LinearLayout>
         <Button
@@ -212,29 +254,39 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="1"/>
             <TextView
                 android:id="@+id/myTextView2"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="2"/>
             <TextView
                 android:id="@+id/myTextView3"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="3"/>
             <TextView
                 android:id="@+id/myTextView4"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="4"/>
             <TextView
                 android:layout_weight="2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="Score"/>
         </LinearLayout>
         <LinearLayout
@@ -248,29 +300,40 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="5"/>
             <TextView
                 android:id="@+id/myTextView6"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="6"/>
             <TextView
                 android:id="@+id/myTextView7"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="7"/>
             <TextView
                 android:id="@+id/myTextView8"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="8"/>
             <TextView
+                android:id="@+id/myScore"
                 android:layout_weight="2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="64"/>
         </LinearLayout>
         <LinearLayout
@@ -284,29 +347,39 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="9"/>
             <TextView
                 android:id="@+id/myTextView10"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="10"/>
             <TextView
                 android:id="@+id/myTextView11"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="11"/>
             <TextView
                 android:id="@+id/myTextView12"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="12"/>
             <TextView
                 android:layout_weight="2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="Count"/>
         </LinearLayout>
         <LinearLayout
@@ -320,29 +393,40 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="13"/>
             <TextView
                 android:id="@+id/myTextView14"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="14"/>
             <TextView
                 android:id="@+id/myTextView15"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="15"/>
             <TextView
                 android:id="@+id/myTextView16"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="16"/>
             <TextView
+                android:id="@+id/myCount"
                 android:layout_weight="2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:textAlignment="center"
+                android:gravity="center"
                 android:text="17"/>
         </LinearLayout>
     </LinearLayout>

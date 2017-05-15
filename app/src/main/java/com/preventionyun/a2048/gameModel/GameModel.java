@@ -10,7 +10,7 @@ public class GameModel {
 
 	final static boolean debugMode = false;
 	public final static int arrayLength = 4;	// 정방행렬 사이즈 어떻게 할 것인가?
-	int count = 20;	// 게임 목숨
+	public int count = 20;	// 게임 목숨
 	public int totalScore = 0;
 	
 	boolean gameActionsInitialized;

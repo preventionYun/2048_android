@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final static String TAG = "MainACtivity";
     private GameModel gameModel;
+    private boolean isGameStarted = false;
 
     private Button upArrowBtn, leftArrowBtn, rightArrowBtn, downArrowBtn;
     private Button newBtn, endBtn;
@@ -26,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
             myTextView5, myTextView6, myTextView7, myTextView8,
             myTextView9, myTextView10, myTextView11, myTextView12,
             myTextView13, myTextView14, myTextView15, myTextView16;
-
+    private TextView myScore, myCount;
     private GameModel.GameState gameState;
 
     @Override
@@ -82,12 +83,17 @@ public class MainActivity extends AppCompatActivity {
         myTextView15 = (TextView)findViewById(R.id.myTextView15);
         myTextView16 = (TextView)findViewById(R.id.myTextView16);
 
+        myCount = (TextView)findViewById(R.id.myCount);
+        myScore = (TextView)findViewById(R.id.myScore);
+
         upArrowBtn.setOnClickListener(OnClickListener);
         leftArrowBtn.setOnClickListener(OnClickListener);
         rightArrowBtn.setOnClickListener(OnClickListener);
         downArrowBtn.setOnClickListener(OnClickListener);
         newBtn.setOnClickListener(OnClickListener);
         endBtn.setOnClickListener(OnClickListener);
+
+        setButtonsState(isGameStarted);
     }
 
     private View.OnClickListener OnClickListener = new View.OnClickListener(){
@@ -106,6 +112,9 @@ public class MainActivity extends AppCompatActivity {
 
                 //case R.id.newBtn : key = 'n'; break;
                 case R.id.newBtn :
+                    isGameStarted = true;
+                    setButtonsState(isGameStarted);
+
                     // 프로그램이 처음 시작하면 랜덤으로 숫자를 생성
                     key = (char) ('0' + random.nextInt(4));
                     key2 = (char) ('0' + random.nextInt(4));
@@ -143,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                     case Finished:
                         System.out.println("Game Finished!");
                         System.out.println("Your total score : " + gameModel.totalScore);
-                        return;
+                        //return;
                 }
             }catch (Exception e){
                 Log.d(TAG, "Exception 발생");
@@ -154,21 +163,47 @@ public class MainActivity extends AppCompatActivity {
     };
 
     public void updateMyView(){
-        myTextView1.setText("" + gameModel.screen.get_array()[0][0]);
-        myTextView2.setText("" + gameModel.screen.get_array()[0][1]);
-        myTextView3.setText("" + gameModel.screen.get_array()[0][2]);
-        myTextView4.setText("" + gameModel.screen.get_array()[0][3]);
-        myTextView5.setText("" + gameModel.screen.get_array()[1][0]);
-        myTextView6.setText("" + gameModel.screen.get_array()[1][1]);
-        myTextView7.setText("" + gameModel.screen.get_array()[1][2]);
-        myTextView8.setText("" + gameModel.screen.get_array()[1][3]);
-        myTextView9.setText("" + gameModel.screen.get_array()[2][0]);
-        myTextView10.setText("" + gameModel.screen.get_array()[2][1]);
-        myTextView11.setText("" + gameModel.screen.get_array()[2][2]);
-        myTextView12.setText("" + gameModel.screen.get_array()[2][3]);
-        myTextView13.setText("" + gameModel.screen.get_array()[3][0]);
-        myTextView14.setText("" + gameModel.screen.get_array()[3][1]);
-        myTextView15.setText("" + gameModel.screen.get_array()[3][2]);
-        myTextView16.setText("" + gameModel.screen.get_array()[3][3]);
+        if(gameModel.screen.get_array()[0][0] == 0) myTextView1.setText("");
+        else myTextView1.setText("" + gameModel.screen.get_array()[0][0]);
+        if(gameModel.screen.get_array()[0][1] == 0) myTextView2.setText("");
+        else myTextView2.setText("" + gameModel.screen.get_array()[0][1]);
+        if(gameModel.screen.get_array()[0][2] == 0) myTextView3.setText("");
+        else myTextView3.setText("" + gameModel.screen.get_array()[0][2]);
+        if(gameModel.screen.get_array()[0][3] == 0) myTextView4.setText("");
+        else myTextView4.setText("" + gameModel.screen.get_array()[0][3]);
+        if(gameModel.screen.get_array()[1][0] == 0) myTextView5.setText("");
+        else myTextView5.setText("" + gameModel.screen.get_array()[1][0]);
+        if(gameModel.screen.get_array()[1][1] == 0) myTextView6.setText("");
+        else myTextView6.setText("" + gameModel.screen.get_array()[1][1]);
+        if(gameModel.screen.get_array()[1][2] == 0) myTextView7.setText("");
+        else myTextView7.setText("" + gameModel.screen.get_array()[1][2]);
+        if(gameModel.screen.get_array()[1][3] == 0) myTextView8.setText("");
+        else myTextView8.setText("" + gameModel.screen.get_array()[1][3]);
+        if(gameModel.screen.get_array()[2][0] == 0) myTextView9.setText("");
+        else myTextView9.setText("" + gameModel.screen.get_array()[2][0]);
+        if(gameModel.screen.get_array()[2][1] == 0) myTextView10.setText("");
+        else myTextView10.setText("" + gameModel.screen.get_array()[2][1]);
+        if(gameModel.screen.get_array()[2][2] == 0) myTextView11.setText("");
+        else myTextView11.setText("" + gameModel.screen.get_array()[2][2]);
+        if(gameModel.screen.get_array()[2][3] == 0) myTextView12.setText("");
+        else myTextView12.setText("" + gameModel.screen.get_array()[2][3]);
+        if(gameModel.screen.get_array()[3][0] == 0) myTextView13.setText("");
+        else myTextView13.setText("" + gameModel.screen.get_array()[3][0]);
+        if(gameModel.screen.get_array()[3][1] == 0) myTextView14.setText("");
+        else myTextView14.setText("" + gameModel.screen.get_array()[3][1]);
+        if(gameModel.screen.get_array()[3][2] == 0) myTextView15.setText("");
+        else myTextView15.setText("" + gameModel.screen.get_array()[3][2]);
+        if(gameModel.screen.get_array()[3][3] == 0) myTextView16.setText("");
+        else myTextView16.setText("" + gameModel.screen.get_array()[3][3]);
+
+        myScore.setText("" + gameModel.totalScore);
+        myCount.setText("" + gameModel.count);
+    }
+
+    // 게임이 진행중인지 flag를 인자로 넣음
+    // 게임중이면 new 버튼 비활성화, end 버튼 활성화
+    private void setButtonsState(boolean flag){
+        newBtn.setEnabled(!flag);
+        endBtn.setEnabled(flag);
     }
 }
