@@ -35,13 +35,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        try {
-            Log.d(TAG, "게임 모델 생성");
-            gameModel = new GameModel();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
         upArrowBtn = (Button)findViewById(R.id.upArrowBtn);
         leftArrowBtn = (Button)findViewById(R.id.leftArrowBtn);
         rightArrowBtn = (Button)findViewById(R.id.rightArrowBtn);
@@ -86,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         myCount = (TextView)findViewById(R.id.myCount);
         myScore = (TextView)findViewById(R.id.myScore);
 
+        // 리스너 등록
         upArrowBtn.setOnClickListener(OnClickListener);
         leftArrowBtn.setOnClickListener(OnClickListener);
         rightArrowBtn.setOnClickListener(OnClickListener);
@@ -93,63 +87,60 @@ public class MainActivity extends AppCompatActivity {
         newBtn.setOnClickListener(OnClickListener);
         endBtn.setOnClickListener(OnClickListener);
 
+        // 버튼의 활성화 관련 변경(New -> 활성화, End -> 비활성화)
         setButtonsState(isGameStarted);
     }
 
     private View.OnClickListener OnClickListener = new View.OnClickListener(){
         public void onClick(View v){
             char key;
-            char key2;	// 랜덤 좌표를 위하여 key 인자를 하나 더 늘림.
-            Random random = new Random();
-
             int id = v.getId();
-
             switch (id) {   // 눌린 버튼의 종류에 따라서 다르게 동작한다.
                 case R.id.upArrowBtn : key = 'w'; break;
                 case R.id.leftArrowBtn : key = 'a'; break;
                 case R.id.rightArrowBtn : key = 'd'; break;
                 case R.id.downArrowBtn : key = 's'; break;
-
-                //case R.id.newBtn : key = 'n'; break;
                 case R.id.newBtn :
+                    try {
+                        Log.d(TAG, "게임 모델 생성");
+                        gameModel = new GameModel();    // 새 버튼을 누를 때마다 게임 모델을 재생성함. 이전의 모델은 버려버림.
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    key = 'n';
                     isGameStarted = true;
                     setButtonsState(isGameStarted);
-
-                    // 프로그램이 처음 시작하면 랜덤으로 숫자를 생성
-                    key = (char) ('0' + random.nextInt(4));
-                    key2 = (char) ('0' + random.nextInt(4));
                     try {
-                        gameModel.accept((char) ((key2 - '0') * gameModel.arrayLength + (key - '0')));    // accept로 넣는다.
+                        // 랜덤으로 2를 2개 생성한다.
+                        gameModel.accept(getBlankLocation());
+                        // ?? 게임 모델의 상태를 이쪽에서 바꿔버리면 MVC 패턴을 사용하는 것에서 벗어나지 않는가..?
+                        // 게임 모델의 상태를 여기서 NewNumber로 바꾸지 않으면, Running 상태에선 빈공간의 char 값을 받아도 무시하게 됨.
+                        // 불확정적인 것은 모델 밖으로 빼야한다면... 모델 전체를 변경해야함..??
+                        gameModel.gameState = GameModel.GameState.NewNumber; // ?? 문제의 부분
+                        gameModel.accept(getBlankLocation());
                     }catch (Exception e){
                         Log.d(TAG, "newBtn 에러 발생");
                         e.printStackTrace();
                     }
                     break;
-                case R.id.endBtn : key = 'e'; break;
+                case R.id.endBtn :
+                    key = 'e';
+                    isGameStarted = false;
+                    setButtonsState(isGameStarted);
+                    break;
                 default: return;
             }
             Log.d(TAG, "눌린 버튼 : " + key);
-
             try {
-                gameState = gameModel.accept(key);
-                switch (gameState) {
-                    case NewNumber:
-                        while (true) {    // 무한루프를 돌면서 빈 공간을 찾는다. 이 게임에서는 10번의 제한 카운트가 있기 때문에 빈 곳이 없어서 무한루프에 빠지는 경우는 없음
-                            key = (char) ('0' + random.nextInt(4));        // 랜덤으로 행과 열을 만들어 본다.
-                            key2 = (char) ('0' + random.nextInt(4));
-                            if (gameModel.screen.get_array()[key - '0'][key2 - '0'] == 0) {    // 매트릭스에서 랜덤으로 빈 곳을 발견.
-                                //((key2 - '0') * gameModel.arrayLength + (key - '0')); // 2차원 행과 열 값을 1차원으로 변경...
-                                // 예) 4x4 행렬은 1x16 행렬로 바꿀 수 있음.
-                                // accept의 인자로 행과 열 2개를 보내려면 너무 복잡해지니까.. 변경함.
-                                // if(debugMode) System.out.println("y : " + key + " , x : " + key2 + "는 비어있음.");
-                                // if(debugMode) System.out.println((key2 - '0') * gameModel.arrayLength + (key - '0'));
-                                gameModel.accept((char) ((key2 - '0') * gameModel.arrayLength + (key - '0')));    // accept로 넣는다.
-                                break;    // 무한루프 종료
-                            }
-                        }
+                gameState = gameModel.accept(key);  // 키에 맞게 동작을 시킨다.
+                switch (gameState) {    // 동작의 결과인 gameState따라 추후 동작 결정.
+                    case NewNumber: // 새 번호가 필요한 상태
+                        gameModel.accept(getBlankLocation());   // 빈 자리에 2를 생성함.
                         break;
 
-                    case Finished:
+                    case Finished:  // 종료상태(카운트 다 사용함)
+                        isGameStarted = false;
+                        setButtonsState(isGameStarted);
                         System.out.println("Game Finished!");
                         System.out.println("Your total score : " + gameModel.totalScore);
                         //return;
@@ -158,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Exception 발생");
                 e.printStackTrace();
             }
-            updateMyView();
+            updateMyView(); // 화면 갱신
         }
     };
 
@@ -201,9 +192,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 게임이 진행중인지 flag를 인자로 넣음
-    // 게임중이면 new 버튼 비활성화, end 버튼 활성화
+    // 게임중이면 New 버튼 비활성화, End 버튼 활성화
     private void setButtonsState(boolean flag){
         newBtn.setEnabled(!flag);
         endBtn.setEnabled(flag);
+        upArrowBtn.setEnabled(flag);
+        downArrowBtn.setEnabled(flag);
+        rightArrowBtn.setEnabled(flag);
+        leftArrowBtn.setEnabled(flag);
+    }
+
+    private char getBlankLocation(){
+        Random random = new Random();
+        char x;
+        char y;
+        Log.d(TAG, "빈 자리 찾기 전 스크린 상태");
+        gameModel.screen.print();
+        while (true) {    // 무한루프를 돌면서 빈 공간을 찾는다. 이 게임에서는 제한 카운트가 있기 때문에 빈 곳이 없어서 무한루프에 빠지는 경우는 없음.
+            x = (char) ('0' + random.nextInt(4));        // 랜덤으로 행과 열을 만들어 본다.
+            y = (char) ('0' + random.nextInt(4));
+            if (gameModel.screen.get_array()[x - '0'][y - '0'] == 0) {    // 매트릭스에서 랜덤으로 빈 곳을 발견.
+                Log.d(TAG, "빈 위치 발견 - x축 : " + x + " y축 : " + y);
+                return (char) ((y - '0') * gameModel.arrayLength + (x - '0'));
+            }
+        }
     }
 }

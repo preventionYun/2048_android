@@ -48,7 +48,7 @@ public class GameModel {
 			gameState = GameState.Running;
 		}
 		
-		boolean newNumberNeeded;
+		boolean newNumberNeeded = false;
 		switch (key) {
 	        case 'a':
 	        	newNumberNeeded = moveLeft(key);
@@ -62,14 +62,10 @@ public class GameModel {
 	        case 'w':
 	        	newNumberNeeded = moveUp(key);
 	            break;
-	        default :
-	        	// 잘못된 key의 경우 이쪽이 실행된다.
-	            return GameState.Finished;	//!!
 		}
 		
 		if(newNumberNeeded){	// 단축키 조작 결과로 새로운 숫자가 필요한 상황인가 체크
 			gameState = GameState.NewNumber;	// 상태변경
-			//return gameState;
 		}else{
 			screen.print();		// 새로운 상태가 필요한 경우라면 지금 화면을 갱신할 필요는 없음.
 		}
