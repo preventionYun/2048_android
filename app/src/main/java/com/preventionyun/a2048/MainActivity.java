@@ -92,34 +92,6 @@ public class MainActivity extends AppCompatActivity {
 
     private View.OnClickListener OnClickListener = new View.OnClickListener(){
         public void onClick(View v){
-            /*
-            while((key = getKey()) != 'q'){
-                gameModel.accept(key);
-                switch(gameModel.gameState){
-                    case NewNumber :
-                        while(true){	// 무한루프를 돌면서 빈 공간을 찾는다. 이 게임에서는 10번의 제한 카운트가 있기 때문에 빈 곳이 없어서 무한루프에 빠지는 경우는 없음
-                            key = (char) ('0' + random.nextInt(4));		// 랜덤으로 행과 열을 만들어 본다.
-                            key2 = (char) ('0' + random.nextInt(4));
-                            if(gameModel.screen.get_array()[key-'0'][key2-'0'] == 0){	// 매트릭스에서 랜덤으로 빈 곳을 발견.
-                                //((key2 - '0') * gameModel.arrayLength + (key - '0')); // 2차원 행과 열 값을 1차원으로 변경...
-                                // 예) 4x4 행렬은 1x16 행렬로 바꿀 수 있음.
-                                // accept의 인자로 행과 열 2개를 보내려면 너무 복잡해지니까.. 변경함.
-                                // if(debugMode) System.out.println("y : " + key + " , x : " + key2 + "는 비어있음.");
-                                // if(debugMode) System.out.println((key2 - '0') * gameModel.arrayLength + (key - '0'));
-                                gameModel.accept((char)((key2 - '0') * gameModel.arrayLength + (key - '0')));	// accept로 넣는다.
-                                break;	// 무한루프 종료
-                            }
-                        }
-                        break;
-
-                    case Finished :
-                        System.out.println("Game Finished!");
-                        System.out.println("Your total score : " + gameModel.totalScore);
-                        return ;
-                }
-            }
-            */
-
             char key;
             char key2;	// 랜덤 좌표를 위하여 key 인자를 하나 더 늘림.
             Random random = new Random();
@@ -177,6 +149,26 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Exception 발생");
                 e.printStackTrace();
             }
+            updateMyView();
         }
     };
+
+    public void updateMyView(){
+        myTextView1.setText("" + gameModel.screen.get_array()[0][0]);
+        myTextView2.setText("" + gameModel.screen.get_array()[0][1]);
+        myTextView3.setText("" + gameModel.screen.get_array()[0][2]);
+        myTextView4.setText("" + gameModel.screen.get_array()[0][3]);
+        myTextView5.setText("" + gameModel.screen.get_array()[1][0]);
+        myTextView6.setText("" + gameModel.screen.get_array()[1][1]);
+        myTextView7.setText("" + gameModel.screen.get_array()[1][2]);
+        myTextView8.setText("" + gameModel.screen.get_array()[1][3]);
+        myTextView9.setText("" + gameModel.screen.get_array()[2][0]);
+        myTextView10.setText("" + gameModel.screen.get_array()[2][1]);
+        myTextView11.setText("" + gameModel.screen.get_array()[2][2]);
+        myTextView12.setText("" + gameModel.screen.get_array()[2][3]);
+        myTextView13.setText("" + gameModel.screen.get_array()[3][0]);
+        myTextView14.setText("" + gameModel.screen.get_array()[3][1]);
+        myTextView15.setText("" + gameModel.screen.get_array()[3][2]);
+        myTextView16.setText("" + gameModel.screen.get_array()[3][3]);
+    }
 }
