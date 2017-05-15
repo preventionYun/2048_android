@@ -18,21 +18,25 @@
             android:orientation="horizontal"
             android:weightSum="6">
             <TextView
+                android:id="@+id/enemyTextView1"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="1"/>
             <TextView
+                android:id="@+id/enemyTextView2"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="2"/>
             <TextView
+                android:id="@+id/enemyTextView3"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="3"/>
             <TextView
+                android:id="@+id/enemyTextView4"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -50,21 +54,25 @@
             android:orientation="horizontal"
             android:weightSum="6">
             <TextView
+                android:id="@+id/enemyTextView5"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="5"/>
             <TextView
+                android:id="@+id/enemyTextView6"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="6"/>
             <TextView
+                android:id="@+id/enemyTextView7"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="7"/>
             <TextView
+                android:id="@+id/enemyTextView8"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -82,21 +90,25 @@
             android:orientation="horizontal"
             android:weightSum="6">
             <TextView
+                android:id="@+id/enemyTextView9"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="9"/>
             <TextView
+                android:id="@+id/enemyTextView10"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="10"/>
             <TextView
+                android:id="@+id/enemyTextView11"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="11"/>
             <TextView
+                android:id="@+id/enemyTextView12"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -114,21 +126,25 @@
             android:orientation="horizontal"
             android:weightSum="6">
             <TextView
+                android:id="@+id/enemyTextView13"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="13"/>
             <TextView
+                android:id="@+id/enemyTextView14"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="14"/>
             <TextView
+                android:id="@+id/enemyTextView15"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="15"/>
             <TextView
+                android:id="@+id/enemyTextView16"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -148,6 +164,7 @@
         android:weightSum="6"
         android:orientation="horizontal">
         <Button
+            android:id="@+id/newBtn"
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -171,6 +188,7 @@
                 android:text="My View ↓"/>
         </LinearLayout>
         <Button
+            android:id="@+id/endBtn"
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -190,21 +208,25 @@
             android:orientation="horizontal"
             android:weightSum="6">
             <TextView
+                android:id="@+id/myTextView1"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="1"/>
             <TextView
+                android:id="@+id/myTextView2"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="2"/>
             <TextView
+                android:id="@+id/myTextView3"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="3"/>
             <TextView
+                android:id="@+id/myTextView4"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -222,21 +244,25 @@
             android:orientation="horizontal"
             android:weightSum="6">
             <TextView
+                android:id="@+id/myTextView5"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="5"/>
             <TextView
+                android:id="@+id/myTextView6"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="6"/>
             <TextView
+                android:id="@+id/myTextView7"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="7"/>
             <TextView
+                android:id="@+id/myTextView8"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -254,21 +280,25 @@
             android:orientation="horizontal"
             android:weightSum="6">
             <TextView
+                android:id="@+id/myTextView9"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="9"/>
             <TextView
+                android:id="@+id/myTextView10"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="10"/>
             <TextView
+                android:id="@+id/myTextView11"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="11"/>
             <TextView
+                android:id="@+id/myTextView12"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -286,21 +316,25 @@
             android:orientation="horizontal"
             android:weightSum="6">
             <TextView
+                android:id="@+id/myTextView13"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="13"/>
             <TextView
+                android:id="@+id/myTextView14"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="14"/>
             <TextView
+                android:id="@+id/myTextView15"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:text="15"/>
             <TextView
+                android:id="@+id/myTextView16"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -329,6 +363,7 @@
                 android:layout_weight="1"
                 android:layout_height="0dp"/>
             <Button
+                android:id="@+id/leftArrowBtn"
                 android:layout_width="match_parent"
                 android:layout_weight="1"
                 android:layout_height="0dp"
@@ -340,11 +375,13 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
             <Button
+                android:id="@+id/upArrowBtn"
                 android:layout_width="match_parent"
                 android:layout_weight="1"
                 android:layout_height="0dp"
                 android:text="↑"/>
             <Button
+                android:id="@+id/downArrowBtn"
                 android:layout_width="match_parent"
                 android:layout_weight="1"
                 android:layout_height="0dp"
@@ -360,6 +397,7 @@
                 android:layout_weight="1"
                 android:layout_height="0dp"/>
             <Button
+                android:id="@+id/rightArrowBtn"
                 android:layout_width="match_parent"
                 android:layout_weight="1"
                 android:layout_height="0dp"
