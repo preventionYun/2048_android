@@ -1,6 +1,8 @@
 package com.preventionyun.a2048.gameModel;
 
-public class GameModel {
+import java.io.Serializable;
+
+public class GameModel implements Serializable{
 	public enum GameState{
 		Start(0), Running(1), NewNumber(2), Finished(3), Error(4);
 		private final int value;

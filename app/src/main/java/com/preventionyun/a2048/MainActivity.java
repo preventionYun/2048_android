@@ -3,7 +3,9 @@ package com.preventionyun.a2048;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Surface;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView myScore, myCount;
     private android.os.Handler mHandler;
     private GameState gameState = GameState.Initial;
+    private GameState savedState;
     private char savedKey;
 
     public enum GameState {
@@ -93,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
             case 2: mHandler.post(runnablePause); break;
             case 3: mHandler.post(runnableResume); break;
             case 4: mHandler.post(runnableUpdate); break;
-            //case 5: mHandler.post(runnableRecover); break;
+            case 5: mHandler.post(runnableRecover); break;
             default: Log.d(TAG, "unknown user command!"); break;
         }
     }
@@ -101,7 +104,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        WindowManager wm = getWindowManager();
+        if (wm == null) return;
+        int rotation = wm.getDefaultDisplay().getRotation();
+        // 디바이스의 회전에 따라 다르게 뷰를 불러온다.
+        if(rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
+            Log.d(TAG, "onCreate: portrait mode");
+            setContentView(R.layout.activity_main); // 일반모드
+        }else {
+            Log.d(TAG, "onCreate: landscape mode");
+            setContentView(R.layout.activity_main_landscape);   // 가로모드
+        }
 
         upArrowBtn = (Button)findViewById(R.id.upArrowBtn);
         leftArrowBtn = (Button)findViewById(R.id.leftArrowBtn);
@@ -157,6 +170,43 @@ public class MainActivity extends AppCompatActivity {
 
         setButtonsState();
         mHandler = new android.os.Handler();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+        // onPause가 불리는 순간
+        savedState = gameState;                     // 게임의 상태변수를 저장함.
+        if (gameState == GameState.Running)         // Running 상태였다면,
+            executeUserCommand(UserCommand.Pause);  // Pause 커맨드
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        // onResume
+        if (savedState == GameState.Running)        // 저장된 상태가 Running이었다면,
+            executeUserCommand(UserCommand.Resume); // Resume 커맨드 (홈 화면에 갔다오거나, 전화 등이 와서 멈추었다가 다시 돌아온 상태)
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState){
+        super.onSaveInstanceState(outState);
+        Log.d(TAG, "onSave");
+        outState.putSerializable("myGameModel", gameModel); // 게임 모델
+        outState.putInt("savedState", savedState.value());  // 게임의 상태
+    }
+    @Override
+    protected void onRestoreInstanceState(Bundle inState) {
+        super.onRestoreInstanceState(inState);
+        Log.d(TAG, "onRestore");
+        // 복구
+        savedState = GameState.fromInteger(inState.getInt("savedState"));
+        if (savedState != GameState.Initial) {  // Initial 단계에는 저장된 모델이 없음.
+            gameModel = (GameModel) inState.getSerializable("myGameModel");
+            executeUserCommand(UserCommand.Recover);    // 복구 커맨드
+        }
     }
 
     // 어떻게 동작할 것인가, 정의
@@ -363,7 +413,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case Finished:  // 종료상태(카운트 다 사용함)
                         UserCommand cmd = UserCommand.Quit;
-                        executeUserCommand(cmd);    // 커맨드를 실행
+                        executeUserCommand(cmd);                // 종료 커맨드를 실행
                         System.out.println("Game Finished!");
                         System.out.println("Your total score : " + gameModel.totalScore);
                         //return;
@@ -374,27 +424,21 @@ public class MainActivity extends AppCompatActivity {
             updateMyView();
         }
     };
-    /*
+
     private Runnable runnableRecover = new Runnable() {
         @Override
         public void run() {
-            random = new Random();
-            myTetView.init(dy, dx, myTetModel.board.iScreenDw);
-            myBlkView.init(myTetModel.board.iScreenDw);
-            myTetView.accept(myTetModel.board.oCScreen);
-            myBlkView.accept(myTetModel.getBlock(nextBlk));
-            myTetView.invalidate();
-            myBlkView.invalidate();
+            Log.d(TAG, "recover");
+            updateMyView();
             setButtonsState();
-            startBtn.setText("Q");
+            newBtn.setText("P");
             Toast.makeText(MainActivity.this, "Game Recovered!", Toast.LENGTH_SHORT).show();
-            if (savedState == GameState.Running){
-                mHandler.post(runnableResume);
-                pauseBtn.setText("P");
+            if (savedState == GameState.Running){   // 복구 전 상태가 진행중이었다면
+                mHandler.post(runnableResume);      // 게임 resume
+                newBtn.setText("P");                // 버튼 갱신
             }
-            else if (savedState == GameState.Paused)
-                pauseBtn.setText("R");
+            else if (savedState == GameState.Paused)    // 멈춤 상태였다면
+                newBtn.setText("R");                    // 버튼만 갱신
         }
     };
-    */
 }
