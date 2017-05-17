@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.preventionyun.a2048.gameModel.GameModel;
 
@@ -15,7 +16,6 @@ public class MainActivity extends AppCompatActivity {
 
     private final static String TAG = "MainACtivity";
     private GameModel gameModel;
-    private boolean isGameStarted = false;
 
     private Button upArrowBtn, leftArrowBtn, rightArrowBtn, downArrowBtn;
     private Button newBtn, endBtn;
@@ -28,7 +28,9 @@ public class MainActivity extends AppCompatActivity {
             myTextView9, myTextView10, myTextView11, myTextView12,
             myTextView13, myTextView14, myTextView15, myTextView16;
     private TextView myScore, myCount;
-    private GameModel.GameState gameState;
+    private android.os.Handler mHandler;
+    private GameState gameState = GameState.Initial;
+    private char savedKey;
 
     public enum GameState {
         Error(-1), Initial(0), Running(1), Paused(2);
@@ -79,6 +81,21 @@ public class MainActivity extends AppCompatActivity {
         leftArrowBtn.setEnabled(otherFlag);
         rightArrowBtn.setEnabled(otherFlag);
         downArrowBtn.setEnabled(otherFlag);
+    }
+
+    private void executeUserCommand(UserCommand cmd) {
+        gameState = GameState.fromInteger(stateMatrix[gameState.value()][cmd.value()]); // stateMatrix를 통해 커맨드 실행 후 다음 상태를 갖고 옴
+        if(gameState == GameState.Error) Log.d(TAG, "game state error!");
+        switch (cmd.value()){
+            // NOP(-1), Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5)
+            case 0: mHandler.post(runnableQuit); break;
+            case 1: mHandler.post(runnableStart); break;
+            case 2: mHandler.post(runnablePause); break;
+            case 3: mHandler.post(runnableResume); break;
+            case 4: mHandler.post(runnableUpdate); break;
+            //case 5: mHandler.post(runnableRecover); break;
+            default: Log.d(TAG, "unknown user command!"); break;
+        }
     }
 
     @Override
@@ -138,10 +155,41 @@ public class MainActivity extends AppCompatActivity {
         newBtn.setOnClickListener(OnClickListener);
         endBtn.setOnClickListener(OnClickListener);
 
-        // 버튼의 활성화 관련 변경(New -> 활성화, End -> 비활성화)
-        setButtonsState(isGameStarted);
+        setButtonsState();
+        mHandler = new android.os.Handler();
     }
 
+    // 어떻게 동작할 것인가, 정의
+    private View.OnClickListener OnClickListener = new View.OnClickListener(){
+        public void onClick(View v) {
+            int id = v.getId();
+            UserCommand cmd = UserCommand.NOP;
+            switch (id) {   // 눌린 버튼의 종류에 따라서 다르게 동작한다.
+                // 눌린 버튼
+                // 게임의 상태
+                // 위 두 가지를 고려해서 동작을 결정함.
+                case R.id.newBtn:
+                    savedKey = 'N';
+                    if (gameState == GameState.Initial) cmd = UserCommand.Start;
+                    else if (gameState == GameState.Running) cmd = UserCommand.Pause;    // Running 면 'N'은 'P'모양을 함.
+                    else if (gameState == GameState.Paused) cmd = UserCommand.Resume;      // Paused 면 'N'은 'R'모양을 함.
+                    break;
+                case R.id.endBtn:
+                    savedKey = 'Q';
+                    if (gameState == GameState.Running) cmd = UserCommand.Quit;
+                    else if (gameState == GameState.Paused) cmd = UserCommand.Quit;
+                    break;
+                case R.id.upArrowBtn: savedKey = 'w'; cmd = UserCommand.Update; break;
+                case R.id.leftArrowBtn: savedKey = 'a'; cmd = UserCommand.Update; break;
+                case R.id.rightArrowBtn: savedKey = 'd'; cmd = UserCommand.Update; break;
+                case R.id.downArrowBtn: savedKey = 's'; cmd = UserCommand.Update; break;
+                default: return;
+            }
+            // 위에서 눌린 버튼 종류, 게임의 상태를 고려하여 유저가 실행할 커맨드를 결정했음.
+            executeUserCommand(cmd);    // 커맨드를 실행
+        }
+    };
+    /*
     private View.OnClickListener OnClickListener = new View.OnClickListener(){
         public void onClick(View v){
             char key;
@@ -203,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
             updateMyView(); // 화면 갱신
         }
     };
+    */
 
     public void updateMyView(){
         if(gameModel.screen.get_array()[0][0] == 0) myTextView1.setText("");
@@ -242,17 +291,6 @@ public class MainActivity extends AppCompatActivity {
         myCount.setText("" + gameModel.count);
     }
 
-    // 게임이 진행중인지 flag를 인자로 넣음
-    // 게임중이면 New 버튼 비활성화, End 버튼 활성화
-    private void setButtonsState(boolean flag){
-        newBtn.setEnabled(!flag);
-        endBtn.setEnabled(flag);
-        upArrowBtn.setEnabled(flag);
-        downArrowBtn.setEnabled(flag);
-        rightArrowBtn.setEnabled(flag);
-        leftArrowBtn.setEnabled(flag);
-    }
-
     private char getBlankLocation(){
         Random random = new Random();
         char x;
@@ -268,4 +306,95 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    private Runnable runnableQuit = new Runnable() {
+        public void run() {
+            setButtonsState();
+            newBtn.setText("NEW");
+            Toast.makeText(MainActivity.this, "Game Over!", Toast.LENGTH_SHORT).show();
+        }
+    };
+    private Runnable runnableStart = new Runnable() {
+        @Override
+        public void run() {
+            try{
+                gameModel = new GameModel();    // 새 버튼을 누를 때마다 게임 모델을 재생성함. 이전의 모델은 버려버림.
+                // 랜덤으로 2를 2개 생성한다.
+                gameModel.accept(getBlankLocation());
+                // ?? 게임 모델의 상태를 이쪽에서 바꿔버리면 MVC 패턴을 사용하는 것에서 벗어나지 않는가..?
+                // 게임 모델의 상태를 여기서 NewNumber로 바꾸지 않으면, Running 상태에선 빈공간의 char 값을 받아도 무시하게 됨.
+                // 불확정적인 것은 모델 밖으로 빼야한다면... 모델 전체를 변경해야함..??
+                gameModel.gameState = GameModel.GameState.NewNumber; // ?? 문제의 부분
+                gameModel.accept(getBlankLocation());
+                updateMyView();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+            setButtonsState();
+            newBtn.setText("P");
+            Toast.makeText(MainActivity.this, "Game Stated!", Toast.LENGTH_SHORT).show();
+        }
+    };
+    private Runnable runnablePause = new Runnable() {
+        @Override
+        public void run() {
+            setButtonsState();
+            newBtn.setText("R");
+            Toast.makeText(MainActivity.this, "Game Paused!", Toast.LENGTH_SHORT).show();
+        }
+    };
+    private Runnable runnableResume = new Runnable() {
+        @Override
+        public void run() {
+            setButtonsState();
+            newBtn.setText("P");
+            Toast.makeText(MainActivity.this, "Game Resumed!", Toast.LENGTH_SHORT).show();
+        }
+    };
+    private Runnable runnableUpdate = new Runnable() {
+        @Override
+        public void run() {
+            try{
+                GameModel.GameState actionResult = gameModel.accept(savedKey);  // 키에 맞게 동작을 시킨다.
+                switch (actionResult) {    // 동작의 결과인 gameState따라 추후 동작 결정.
+                    case NewNumber: // 새 번호가 필요한 상태
+                        gameModel.accept(getBlankLocation());   // 빈 자리에 2를 생성함.
+                        break;
+                    case Finished:  // 종료상태(카운트 다 사용함)
+                        UserCommand cmd = UserCommand.Quit;
+                        executeUserCommand(cmd);    // 커맨드를 실행
+                        System.out.println("Game Finished!");
+                        System.out.println("Your total score : " + gameModel.totalScore);
+                        //return;
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            updateMyView();
+        }
+    };
+    /*
+    private Runnable runnableRecover = new Runnable() {
+        @Override
+        public void run() {
+            random = new Random();
+            myTetView.init(dy, dx, myTetModel.board.iScreenDw);
+            myBlkView.init(myTetModel.board.iScreenDw);
+            myTetView.accept(myTetModel.board.oCScreen);
+            myBlkView.accept(myTetModel.getBlock(nextBlk));
+            myTetView.invalidate();
+            myBlkView.invalidate();
+            setButtonsState();
+            startBtn.setText("Q");
+            Toast.makeText(MainActivity.this, "Game Recovered!", Toast.LENGTH_SHORT).show();
+            if (savedState == GameState.Running){
+                mHandler.post(runnableResume);
+                pauseBtn.setText("P");
+            }
+            else if (savedState == GameState.Paused)
+                pauseBtn.setText("R");
+        }
+    };
+    */
 }
