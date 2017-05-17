@@ -30,6 +30,57 @@ public class MainActivity extends AppCompatActivity {
     private TextView myScore, myCount;
     private GameModel.GameState gameState;
 
+    public enum GameState {
+        Error(-1), Initial(0), Running(1), Paused(2);
+        private final int value;
+        private GameState(int value) { this.value = value; }
+        public int value() { return value; }
+        public static GameState fromInteger(int value) {
+            switch (value) {
+                case -1: return Error;
+                case 0: return Initial;
+                case 1: return Running;
+                case 2: return Paused;
+                default: return null;
+            }
+        }
+    }
+
+    public enum UserCommand {
+        NOP(-1), Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5);
+        private final int value;
+        private UserCommand(int value) { this.value = value; }
+        public int value() { return value; }
+    }
+
+    int stateMatrix[][] = { // stateMatrix[currState][userCmd] -> nextState
+            // Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5)
+            /*Initial(0)*/{ -1, 1, -1, -1, -1, 2},   // [Initial][Start] -> Running, [Initial][Recover] -> Paused
+            /*Running(1)*/{ 0, -1, 2, -1, 1, -1},     // [Running][Quit] -> Initial, [Running][Pause] -> Paused, [Running][Update] -> Running
+            /*Paused (2)*/{ 0, 1, -1, 1, 2, -1},      // [Paused][Quit] -> Initial, [Paused][Started,Resume] -> Running, [Paused][Update] -> Paused
+    };
+
+    boolean buttonState[][] = { // buttonState[currState][btnID] -> to be enabled/disabled
+            /*Initial(0)*/{ true, false, false }, // [Initial][StartBtn] -> enabled
+            /*Running(1)*/{ true, true, true },   // [Running][anyBtn] -> enabled
+            /*Paused (2)*/{ true, true, false },  // [Paused][StartBtn,ResumeBtn] -> enable
+    };
+
+    // 버튼의 활성화를 설정하는 함수
+    private void setButtonsState(){
+        // buttonState[현재상태][버튼의 종류] = 버튼의 활성화 유무
+        boolean startFlag = buttonState[gameState.value()][0];
+        boolean pausedFlag = buttonState[gameState.value()][1];
+        boolean otherFlag = buttonState[gameState.value()][2];  // 키 조작
+        newBtn.setEnabled(startFlag);
+        endBtn.setEnabled(pausedFlag);
+        // 조작키
+        upArrowBtn.setEnabled(otherFlag);
+        leftArrowBtn.setEnabled(otherFlag);
+        rightArrowBtn.setEnabled(otherFlag);
+        downArrowBtn.setEnabled(otherFlag);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
