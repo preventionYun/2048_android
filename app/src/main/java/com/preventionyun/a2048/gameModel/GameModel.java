@@ -112,7 +112,7 @@ public class GameModel implements Serializable{
 	interface ActionHandler {
 		public int run(GameModel gm, char key) throws Exception;
 	}
-	class OnLeft implements ActionHandler {
+	class OnLeft implements ActionHandler, Serializable {
 		public int run(GameModel gm, char key) {
 			int score = 0;
 			for(int iterator = 0; iterator < arrayLength; iterator++){
@@ -134,7 +134,7 @@ public class GameModel implements Serializable{
 			return score;
 		}
 	}
-	class OnRight implements ActionHandler {
+	class OnRight implements ActionHandler, Serializable {
 		public int run(GameModel gm, char key) { 
 			int score = 0;
 			for(int iterator = 0; iterator < arrayLength; iterator++){
@@ -156,7 +156,7 @@ public class GameModel implements Serializable{
 			return score;
 		}
 	}
-	class OnDown implements ActionHandler {
+	class OnDown implements ActionHandler, Serializable {
 		public int run(GameModel gm, char key) {
 			int score = 0;
 			for(int iterator = 0; iterator < arrayLength; iterator++){
@@ -178,7 +178,7 @@ public class GameModel implements Serializable{
 			return score;
 		}
 	}
-	class OnUp implements ActionHandler {
+	class OnUp implements ActionHandler, Serializable {
 		public int run(GameModel gm, char key) {
 			int score = 0;
 			for(int iterator = 0; iterator < arrayLength; iterator++){	
@@ -200,7 +200,7 @@ public class GameModel implements Serializable{
 			return score;
 		}
 	}
-	class OnNewNumber implements ActionHandler {
+	class OnNewNumber implements ActionHandler, Serializable {
 		public int run(GameModel gm, char key){
 			int temp = (int)key;	// int형으로 변환을 시키고...
 			// aceept의 인자로 2차원 행렬 -> 1차원 행렬로 바꿔서 인덱스를 보냈음. 반대 과정을 거쳐서 행과 열을 알아낸다.
@@ -212,7 +212,7 @@ public class GameModel implements Serializable{
 		}
 	}
 	
-	class GameAction{
+	class GameAction implements Serializable {
     	protected ActionHandler hDo;
     	public GameAction(ActionHandler d){
     		hDo = d;

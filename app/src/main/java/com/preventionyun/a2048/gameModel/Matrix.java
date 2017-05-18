@@ -1,5 +1,8 @@
 package com.preventionyun.a2048.gameModel;
-public class Matrix {
+
+import java.io.Serializable;
+
+public class Matrix implements Serializable{
 	
 	private final static int currentDebugLevel = 0;	// 현재 디버그 레벨.
 	private final static int debugLevel1 = 1;	// 프로그램의 흐름에 대한 정보. 
