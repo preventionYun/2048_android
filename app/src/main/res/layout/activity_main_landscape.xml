@@ -101,7 +101,7 @@
                 android:layout_height="match_parent"
                 android:textAlignment="center"
                 android:gravity="center"
-                android:text="64"/>
+                android:text="0"/>
         </LinearLayout>
         <LinearLayout
             android:layout_weight="1"
@@ -193,47 +193,41 @@
                 android:layout_height="match_parent"
                 android:textAlignment="center"
                 android:gravity="center"
-                android:text="17"/>
+                android:text="20"/>
         </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="2"
-        android:weightSum="6"
-        android:orientation="horizontal">
+        android:layout_weight="1"
+        android:orientation="vertical">
         <Button
             android:id="@+id/newBtn"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:text="NEW"/>
-        <LinearLayout
-            android:layout_weight="4"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_weight="1"
-                android:layout_height="0dp"
-                android:textAlignment="center"
-                android:gravity="center"
-                android:text="Enemy View ↑"/>
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_weight="1"
-                android:layout_height="0dp"
-                android:textAlignment="center"
-                android:gravity="center"
-                android:text="My View ↓"/>
-        </LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_weight="2"
+            android:layout_height="0dp"
+            android:textAlignment="center"
+            android:gravity="center"
+            android:text="Enemy View\n←"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_weight="2"
+            android:layout_height="0dp"
+            android:textAlignment="center"
+            android:gravity="center"
+            android:text="My View\n→"/>
         <Button
             android:id="@+id/endBtn"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:text="END"/>
     </LinearLayout>
     
@@ -334,7 +328,7 @@
                 android:layout_height="match_parent"
                 android:textAlignment="center"
                 android:gravity="center"
-                android:text="64"/>
+                android:text="0"/>
         </LinearLayout>
         <LinearLayout
             android:layout_weight="1"
@@ -427,13 +421,13 @@
                 android:layout_height="match_parent"
                 android:textAlignment="center"
                 android:gravity="center"
-                android:text="17"/>
+                android:text="20"/>
         </LinearLayout>
     </LinearLayout>
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="2"
+        android:layout_weight="3"
         android:weightSum="3"
         android:orientation="horizontal">
         <LinearLayout

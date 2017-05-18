@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.preventionyun.a2048.gameModel.GameModel;
 
@@ -361,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             setButtonsState();
             newBtn.setText("NEW");
-            Toast.makeText(MainActivity.this, "Game Over!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "Game Over!", Toast.LENGTH_SHORT).show();
         }
     };
     private Runnable runnableStart = new Runnable() {
@@ -383,7 +382,7 @@ public class MainActivity extends AppCompatActivity {
             }
             setButtonsState();
             newBtn.setText("P");
-            Toast.makeText(MainActivity.this, "Game Stated!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "Game Stated!", Toast.LENGTH_SHORT).show();
         }
     };
     private Runnable runnablePause = new Runnable() {
@@ -391,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             setButtonsState();
             newBtn.setText("R");
-            Toast.makeText(MainActivity.this, "Game Paused!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "Game Paused!", Toast.LENGTH_SHORT).show();
         }
     };
     private Runnable runnableResume = new Runnable() {
@@ -399,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             setButtonsState();
             newBtn.setText("P");
-            Toast.makeText(MainActivity.this, "Game Resumed!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "Game Resumed!", Toast.LENGTH_SHORT).show();
         }
     };
     private Runnable runnableUpdate = new Runnable() {
@@ -432,7 +431,7 @@ public class MainActivity extends AppCompatActivity {
             updateMyView();
             setButtonsState();
             newBtn.setText("P");
-            Toast.makeText(MainActivity.this, "Game Recovered!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "Game Recovered!", Toast.LENGTH_SHORT).show();
             if (savedState == GameState.Running){   // 복구 전 상태가 진행중이었다면
                 mHandler.post(runnableResume);      // 게임 resume
                 newBtn.setText("P");                // 버튼 갱신
