@@ -407,10 +407,10 @@ public class MainActivity extends AppCompatActivity {
             try{
                 GameModel.GameState actionResult = gameModel.accept(savedKey);  // 키에 맞게 동작을 시킨다.
                 switch (actionResult) {    // 동작의 결과인 gameState따라 추후 동작 결정.
-                    case NewNumber: // 새 번호가 필요한 상태
+                    case NewNumber: // 새 번호가 필요한 상태(내용물이 변함.)
                         gameModel.accept(getBlankLocation());   // 빈 자리에 2를 생성함.
                         break;
-                    case Finished:  // 종료상태(카운트 다 사용함)
+                    case Finished:  // 종료상태(카운트 다 사용하면, Finished 상태를 리턴함.)
                         UserCommand cmd = UserCommand.Quit;
                         executeUserCommand(cmd);                // 종료 커맨드를 실행
                         System.out.println("Game Finished!");
