@@ -14,7 +14,7 @@ import com.preventionyun.a2048.gameModel.GameModel;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
-
+    // 10.0.2.2
     private final static String TAG = "MainACtivity";
     private GameModel gameModel;
 
