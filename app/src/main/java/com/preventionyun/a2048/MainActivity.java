@@ -1,6 +1,8 @@
 package com.preventionyun.a2048;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Surface;
@@ -14,12 +16,21 @@ import com.preventionyun.a2048.gameModel.GameModel;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
-    // 10.0.2.2
     private final static String TAG = "MainACtivity";
-    private GameModel gameModel;
+    // 서버 관련
+    private String serverIP = "10.0.2.2";
+    private int serverPortNum = 8080;
+    private String myNickName = "me";
+    private String peerNickName = "me";
+
+    private EchoServer echoServer;
+    private GameModel myGameModel, peerGameModel;
+    private boolean battleMode = true;
+    private String gameResult = "You Win!";
+
 
     private Button upArrowBtn, leftArrowBtn, rightArrowBtn, downArrowBtn;
-    private Button newBtn, endBtn;
+    private Button newBtn, modeBtn, endBtn;
     private TextView enemyTextView1, enemyTextView2, enemyTextView3, enemyTextView4,
             enemyTextView5, enemyTextView6, enemyTextView7, enemyTextView8,
             enemyTextView9, enemyTextView10, enemyTextView11, enemyTextView12,
@@ -29,8 +40,10 @@ public class MainActivity extends AppCompatActivity {
             myTextView9, myTextView10, myTextView11, myTextView12,
             myTextView13, myTextView14, myTextView15, myTextView16;
     private TextView myScore, myCount;
-    private android.os.Handler mHandler;
-    private GameState gameState = GameState.Initial;
+    //private android.os.Handler mHandler;
+
+    private GameState myGameState = GameState.Initial;
+    private GameState peerGameState = GameState.Initial;
     private GameState savedState;
     private char savedKey;
 
@@ -51,17 +64,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public enum UserCommand {
-        NOP(-1), Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5);
+        NOP(-1), Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5), Win(6);
         private final int value;
         private UserCommand(int value) { this.value = value; }
         public int value() { return value; }
     }
 
     int stateMatrix[][] = { // stateMatrix[currState][userCmd] -> nextState
-            // Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5)
-            /*Initial(0)*/{ -1, 1, -1, -1, -1, 2},   // [Initial][Start] -> Running, [Initial][Recover] -> Paused
-            /*Running(1)*/{ 0, -1, 2, -1, 1, -1},     // [Running][Quit] -> Initial, [Running][Pause] -> Paused, [Running][Update] -> Running
-            /*Paused (2)*/{ 0, 1, -1, 1, 2, -1},      // [Paused][Quit] -> Initial, [Paused][Started,Resume] -> Running, [Paused][Update] -> Paused
+            // Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5), Win(6)
+            /*Initial(0)*/{ -1, 1, -1, -1, -1, 2, 0},   // [Initial][Start] -> Running, [Initial][Recover] -> Paused
+            /*Running(1)*/{ 0, -1, 2, -1, 1, -1, 0},     // [Running][Quit] -> Initial, [Running][Pause] -> Paused, [Running][Update] -> Running
+            /*Paused (2)*/{ 0, 1, -1, 1, 2, -1, -1},      // [Paused][Quit] -> Initial, [Paused][Started,Resume] -> Running, [Paused][Update] -> Paused
     };
 
     boolean buttonState[][] = { // buttonState[currState][btnID] -> to be enabled/disabled
@@ -70,14 +83,52 @@ public class MainActivity extends AppCompatActivity {
             /*Paused (2)*/{ true, true, false },  // [Paused][StartBtn,ResumeBtn] -> enable
     };
 
+    private void initPeerGame(){
+        peerGameState = GameState.Initial;
+    }
+
+    private Handler hMyViews = new Handler();
+    private Handler hPeerViews = new Handler() {
+        public void handleMessage(Message msg){
+            if(echoServer.isAvailable() == false) return;
+            char key = (char) msg.arg1;
+            GameModel.GameState state = GameModel.GameState.Finished;
+            if(key == 'Q'){
+                gameResult = "You Win!";
+                executeUserCommand(UserCommand.Win);
+                return;
+            }
+            if(peerGameState == GameState.Initial){
+                try {
+                    state = peerGameModel.accept(key);
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
+                updateEnemyView();
+                peerGameState = GameState.Running;
+            }
+            else{
+                try{
+                    state = peerGameModel.accept(key);
+                }
+                catch (Exception e) { e.printStackTrace(); }
+                updateEnemyView();
+                if(state == GameModel.GameState.Finished)
+                    executeUserCommand(UserCommand.Win);
+            }
+            return;
+        };
+    };
+
     // 버튼의 활성화를 설정하는 함수
     private void setButtonsState(){
         // buttonState[현재상태][버튼의 종류] = 버튼의 활성화 유무
-        boolean startFlag = buttonState[gameState.value()][0];
-        boolean pausedFlag = buttonState[gameState.value()][1];
-        boolean otherFlag = buttonState[gameState.value()][2];  // 키 조작
+        boolean startFlag = buttonState[myGameState.value()][0];
+        boolean pausedFlag = buttonState[myGameState.value()][1];
+        boolean otherFlag = buttonState[myGameState.value()][2];  // 키 조작
         newBtn.setEnabled(startFlag);
         endBtn.setEnabled(pausedFlag);
+        modeBtn.setEnabled(startFlag && !pausedFlag);
         // 조작키
         upArrowBtn.setEnabled(otherFlag);
         leftArrowBtn.setEnabled(otherFlag);
@@ -86,16 +137,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void executeUserCommand(UserCommand cmd) {
-        gameState = GameState.fromInteger(stateMatrix[gameState.value()][cmd.value()]); // stateMatrix를 통해 커맨드 실행 후 다음 상태를 갖고 옴
-        if(gameState == GameState.Error) Log.d(TAG, "game state error!");
+        GameState prevState = myGameState;
+        myGameState = GameState.fromInteger(stateMatrix[myGameState.value()][cmd.value()]); // stateMatrix를 통해 커맨드 실행 후 다음 상태를 갖고 옴
+        if(myGameState == GameState.Error){
+            Log.d(TAG, "game state error! (state.cmd)=(" + prevState.value() + "," + cmd.value() + ")");
+            myGameState = prevState;
+            return;
+        }
         switch (cmd.value()){
             // NOP(-1), Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5)
-            case 0: mHandler.post(runnableQuit); break;
-            case 1: mHandler.post(runnableStart); break;
-            case 2: mHandler.post(runnablePause); break;
-            case 3: mHandler.post(runnableResume); break;
-            case 4: mHandler.post(runnableUpdate); break;
-            case 5: mHandler.post(runnableRecover); break;
+            case 0: hMyViews.post(runnableQuit); break;
+            case 1: hMyViews.post(runnableStart); break;
+            case 2: hMyViews.post(runnablePause); break;
+            case 3: hMyViews.post(runnableResume); break;
+            case 4: hMyViews.post(runnableUpdate); break;
+            case 5: hMyViews.post(runnableRecover); break;
+            case 6: hMyViews.post(runnableWin); break;
             default: Log.d(TAG, "unknown user command!"); break;
         }
     }
@@ -120,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
         rightArrowBtn = (Button)findViewById(R.id.rightArrowBtn);
         downArrowBtn = (Button)findViewById(R.id.downArrowBtn);
         newBtn = (Button) findViewById(R.id.newBtn);
+        modeBtn = (Button) findViewById(R.id.modeBtn);
         endBtn = (Button) findViewById(R.id.endBtn);
 
         enemyTextView1 = (TextView)findViewById(R.id.enemyTextView1);
@@ -168,16 +226,27 @@ public class MainActivity extends AppCompatActivity {
         endBtn.setOnClickListener(OnClickListener);
 
         setButtonsState();
-        mHandler = new android.os.Handler();
+        echoServer = new EchoServer(hPeerViews, MainActivity.this);
     }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
+        if(battleMode && echoServer.isAvailable()){
+            echoServer.send('Q');
+            echoServer.disconnect();
+        }
+    }
+
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
         // onPause가 불리는 순간
-        savedState = gameState;                     // 게임의 상태변수를 저장함.
-        if (gameState == GameState.Running)         // Running 상태였다면,
+        savedState = myGameState;                     // 게임의 상태변수를 저장함.
+        if (myGameState == GameState.Running)         // Running 상태였다면,
             executeUserCommand(UserCommand.Pause);  // Pause 커맨드
     }
     @Override
@@ -193,8 +262,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState){
         super.onSaveInstanceState(outState);
         Log.d(TAG, "onSave");
-        outState.putSerializable("myGameModel", gameModel); // 게임 모델
+        outState.putSerializable("myGameModel", myGameModel); // 게임 모델
         outState.putInt("savedState", savedState.value());  // 게임의 상태
+        if(battleMode){
+            outState.putBoolean("battleMode", battleMode);
+            outState.putSerializable("peerGameModel", peerGameModel);
+            outState.putInt("peerGameState", peerGameState.value());
+        }
     }
     @Override
     protected void onRestoreInstanceState(Bundle inState) {
@@ -203,8 +277,12 @@ public class MainActivity extends AppCompatActivity {
         // 복구
         savedState = GameState.fromInteger(inState.getInt("savedState"));
         if (savedState != GameState.Initial) {  // Initial 단계에는 저장된 모델이 없음.
-            gameModel = (GameModel) inState.getSerializable("myGameModel");
+            myGameModel = (GameModel) inState.getSerializable("myGameModel");
             executeUserCommand(UserCommand.Recover);    // 복구 커맨드
+            if (battleMode){
+                peerGameModel = (GameModel) inState.getSerializable("peerGameModel");
+                peerGameState = GameState.fromInteger(inState.getInt("peerGameState"));
+            }
         }
     }
 
@@ -219,14 +297,14 @@ public class MainActivity extends AppCompatActivity {
                 // 위 두 가지를 고려해서 동작을 결정함.
                 case R.id.newBtn:
                     savedKey = 'N';
-                    if (gameState == GameState.Initial) cmd = UserCommand.Start;
-                    else if (gameState == GameState.Running) cmd = UserCommand.Pause;    // Running 면 'N'은 'P'모양을 함.
-                    else if (gameState == GameState.Paused) cmd = UserCommand.Resume;      // Paused 면 'N'은 'R'모양을 함.
+                    if (myGameState == GameState.Initial) cmd = UserCommand.Start;
+                    else if (myGameState == GameState.Running) cmd = UserCommand.Pause;    // Running 면 'N'은 'P'모양을 함.
+                    else if (myGameState == GameState.Paused) cmd = UserCommand.Resume;      // Paused 면 'N'은 'R'모양을 함.
                     break;
                 case R.id.endBtn:
                     savedKey = 'Q';
-                    if (gameState == GameState.Running) cmd = UserCommand.Quit;
-                    else if (gameState == GameState.Paused) cmd = UserCommand.Quit;
+                    if (myGameState == GameState.Running) cmd = UserCommand.Quit;
+                    else if (myGameState == GameState.Paused) cmd = UserCommand.Quit;
                     break;
                 case R.id.upArrowBtn: savedKey = 'w'; cmd = UserCommand.Update; break;
                 case R.id.leftArrowBtn: savedKey = 'a'; cmd = UserCommand.Update; break;
@@ -303,41 +381,79 @@ public class MainActivity extends AppCompatActivity {
     */
 
     public void updateMyView(){
-        if(gameModel.screen.get_array()[0][0] == 0) myTextView1.setText("");
-        else myTextView1.setText("" + gameModel.screen.get_array()[0][0]);
-        if(gameModel.screen.get_array()[0][1] == 0) myTextView2.setText("");
-        else myTextView2.setText("" + gameModel.screen.get_array()[0][1]);
-        if(gameModel.screen.get_array()[0][2] == 0) myTextView3.setText("");
-        else myTextView3.setText("" + gameModel.screen.get_array()[0][2]);
-        if(gameModel.screen.get_array()[0][3] == 0) myTextView4.setText("");
-        else myTextView4.setText("" + gameModel.screen.get_array()[0][3]);
-        if(gameModel.screen.get_array()[1][0] == 0) myTextView5.setText("");
-        else myTextView5.setText("" + gameModel.screen.get_array()[1][0]);
-        if(gameModel.screen.get_array()[1][1] == 0) myTextView6.setText("");
-        else myTextView6.setText("" + gameModel.screen.get_array()[1][1]);
-        if(gameModel.screen.get_array()[1][2] == 0) myTextView7.setText("");
-        else myTextView7.setText("" + gameModel.screen.get_array()[1][2]);
-        if(gameModel.screen.get_array()[1][3] == 0) myTextView8.setText("");
-        else myTextView8.setText("" + gameModel.screen.get_array()[1][3]);
-        if(gameModel.screen.get_array()[2][0] == 0) myTextView9.setText("");
-        else myTextView9.setText("" + gameModel.screen.get_array()[2][0]);
-        if(gameModel.screen.get_array()[2][1] == 0) myTextView10.setText("");
-        else myTextView10.setText("" + gameModel.screen.get_array()[2][1]);
-        if(gameModel.screen.get_array()[2][2] == 0) myTextView11.setText("");
-        else myTextView11.setText("" + gameModel.screen.get_array()[2][2]);
-        if(gameModel.screen.get_array()[2][3] == 0) myTextView12.setText("");
-        else myTextView12.setText("" + gameModel.screen.get_array()[2][3]);
-        if(gameModel.screen.get_array()[3][0] == 0) myTextView13.setText("");
-        else myTextView13.setText("" + gameModel.screen.get_array()[3][0]);
-        if(gameModel.screen.get_array()[3][1] == 0) myTextView14.setText("");
-        else myTextView14.setText("" + gameModel.screen.get_array()[3][1]);
-        if(gameModel.screen.get_array()[3][2] == 0) myTextView15.setText("");
-        else myTextView15.setText("" + gameModel.screen.get_array()[3][2]);
-        if(gameModel.screen.get_array()[3][3] == 0) myTextView16.setText("");
-        else myTextView16.setText("" + gameModel.screen.get_array()[3][3]);
+        if(myGameModel.screen.get_array()[0][0] == 0) myTextView1.setText("");
+        else myTextView1.setText("" + myGameModel.screen.get_array()[0][0]);
+        if(myGameModel.screen.get_array()[0][1] == 0) myTextView2.setText("");
+        else myTextView2.setText("" + myGameModel.screen.get_array()[0][1]);
+        if(myGameModel.screen.get_array()[0][2] == 0) myTextView3.setText("");
+        else myTextView3.setText("" + myGameModel.screen.get_array()[0][2]);
+        if(myGameModel.screen.get_array()[0][3] == 0) myTextView4.setText("");
+        else myTextView4.setText("" + myGameModel.screen.get_array()[0][3]);
+        if(myGameModel.screen.get_array()[1][0] == 0) myTextView5.setText("");
+        else myTextView5.setText("" + myGameModel.screen.get_array()[1][0]);
+        if(myGameModel.screen.get_array()[1][1] == 0) myTextView6.setText("");
+        else myTextView6.setText("" + myGameModel.screen.get_array()[1][1]);
+        if(myGameModel.screen.get_array()[1][2] == 0) myTextView7.setText("");
+        else myTextView7.setText("" + myGameModel.screen.get_array()[1][2]);
+        if(myGameModel.screen.get_array()[1][3] == 0) myTextView8.setText("");
+        else myTextView8.setText("" + myGameModel.screen.get_array()[1][3]);
+        if(myGameModel.screen.get_array()[2][0] == 0) myTextView9.setText("");
+        else myTextView9.setText("" + myGameModel.screen.get_array()[2][0]);
+        if(myGameModel.screen.get_array()[2][1] == 0) myTextView10.setText("");
+        else myTextView10.setText("" + myGameModel.screen.get_array()[2][1]);
+        if(myGameModel.screen.get_array()[2][2] == 0) myTextView11.setText("");
+        else myTextView11.setText("" + myGameModel.screen.get_array()[2][2]);
+        if(myGameModel.screen.get_array()[2][3] == 0) myTextView12.setText("");
+        else myTextView12.setText("" + myGameModel.screen.get_array()[2][3]);
+        if(myGameModel.screen.get_array()[3][0] == 0) myTextView13.setText("");
+        else myTextView13.setText("" + myGameModel.screen.get_array()[3][0]);
+        if(myGameModel.screen.get_array()[3][1] == 0) myTextView14.setText("");
+        else myTextView14.setText("" + myGameModel.screen.get_array()[3][1]);
+        if(myGameModel.screen.get_array()[3][2] == 0) myTextView15.setText("");
+        else myTextView15.setText("" + myGameModel.screen.get_array()[3][2]);
+        if(myGameModel.screen.get_array()[3][3] == 0) myTextView16.setText("");
+        else myTextView16.setText("" + myGameModel.screen.get_array()[3][3]);
 
-        myScore.setText("" + gameModel.totalScore);
-        myCount.setText("" + gameModel.count);
+        myScore.setText("" + myGameModel.totalScore);
+        myCount.setText("" + myGameModel.count);
+    }
+
+    public void updateEnemyView(){
+        if(peerGameModel.screen.get_array()[0][0] == 0) enemyTextView1.setText("");
+        else enemyTextView1.setText("" + peerGameModel.screen.get_array()[0][0]);
+        if(peerGameModel.screen.get_array()[0][1] == 0) enemyTextView2.setText("");
+        else enemyTextView2.setText("" + peerGameModel.screen.get_array()[0][1]);
+        if(peerGameModel.screen.get_array()[0][2] == 0) enemyTextView3.setText("");
+        else enemyTextView3.setText("" + peerGameModel.screen.get_array()[0][2]);
+        if(peerGameModel.screen.get_array()[0][3] == 0) enemyTextView4.setText("");
+        else enemyTextView4.setText("" + peerGameModel.screen.get_array()[0][3]);
+        if(peerGameModel.screen.get_array()[1][0] == 0) enemyTextView5.setText("");
+        else enemyTextView5.setText("" + peerGameModel.screen.get_array()[1][0]);
+        if(peerGameModel.screen.get_array()[1][1] == 0) enemyTextView6.setText("");
+        else enemyTextView6.setText("" + peerGameModel.screen.get_array()[1][1]);
+        if(peerGameModel.screen.get_array()[1][2] == 0) enemyTextView7.setText("");
+        else enemyTextView7.setText("" + peerGameModel.screen.get_array()[1][2]);
+        if(peerGameModel.screen.get_array()[1][3] == 0) enemyTextView8.setText("");
+        else enemyTextView8.setText("" + peerGameModel.screen.get_array()[1][3]);
+        if(peerGameModel.screen.get_array()[2][0] == 0) enemyTextView9.setText("");
+        else enemyTextView9.setText("" + peerGameModel.screen.get_array()[2][0]);
+        if(peerGameModel.screen.get_array()[2][1] == 0) enemyTextView10.setText("");
+        else enemyTextView10.setText("" + peerGameModel.screen.get_array()[2][1]);
+        if(peerGameModel.screen.get_array()[2][2] == 0) enemyTextView11.setText("");
+        else enemyTextView11.setText("" + peerGameModel.screen.get_array()[2][2]);
+        if(peerGameModel.screen.get_array()[2][3] == 0) enemyTextView12.setText("");
+        else enemyTextView12.setText("" + peerGameModel.screen.get_array()[2][3]);
+        if(peerGameModel.screen.get_array()[3][0] == 0) enemyTextView13.setText("");
+        else enemyTextView13.setText("" + peerGameModel.screen.get_array()[3][0]);
+        if(peerGameModel.screen.get_array()[3][1] == 0) enemyTextView14.setText("");
+        else enemyTextView14.setText("" + peerGameModel.screen.get_array()[3][1]);
+        if(peerGameModel.screen.get_array()[3][2] == 0) enemyTextView15.setText("");
+        else enemyTextView15.setText("" + peerGameModel.screen.get_array()[3][2]);
+        if(peerGameModel.screen.get_array()[3][3] == 0) enemyTextView16.setText("");
+        else enemyTextView16.setText("" + peerGameModel.screen.get_array()[3][3]);
+
+        myScore.setText("" + myGameModel.totalScore);
+        myCount.setText("" + myGameModel.count);
     }
 
     private char getBlankLocation(){
@@ -345,37 +461,60 @@ public class MainActivity extends AppCompatActivity {
         char x;
         char y;
         Log.d(TAG, "빈 자리 찾기 전 스크린 상태");
-        gameModel.screen.print();
+        myGameModel.screen.print();
         while (true) {    // 무한루프를 돌면서 빈 공간을 찾는다. 이 게임에서는 제한 카운트가 있기 때문에 빈 곳이 없어서 무한루프에 빠지는 경우는 없음.
             x = (char) ('0' + random.nextInt(4));        // 랜덤으로 행과 열을 만들어 본다.
             y = (char) ('0' + random.nextInt(4));
-            if (gameModel.screen.get_array()[x - '0'][y - '0'] == 0) {    // 매트릭스에서 랜덤으로 빈 곳을 발견.
+            if (myGameModel.screen.get_array()[x - '0'][y - '0'] == 0) {    // 매트릭스에서 랜덤으로 빈 곳을 발견.
                 Log.d(TAG, "빈 위치 발견 - x축 : " + x + " y축 : " + y);
-                return (char) ((y - '0') * gameModel.arrayLength + (x - '0'));
+                return (char) ((y - '0') * myGameModel.arrayLength + (x - '0'));
             }
         }
     }
+
+    private Runnable runnableWin = new Runnable() {
+        public void run() {
+            setButtonsState();
+            if(battleMode && echoServer.isAvailable()){
+                echoServer.disconnect();
+                initPeerGame();
+            }
+        }
+    };
 
     private Runnable runnableQuit = new Runnable() {
         public void run() {
             setButtonsState();
             newBtn.setText("NEW");
             //Toast.makeText(MainActivity.this, "Game Over!", Toast.LENGTH_SHORT).show();
+            if(battleMode && echoServer.isAvailable()){
+                echoServer.send('Q');
+                echoServer.disconnect();
+                initPeerGame();
+            }
         }
     };
     private Runnable runnableStart = new Runnable() {
         @Override
         public void run() {
             try{
-                gameModel = new GameModel();    // 새 버튼을 누를 때마다 게임 모델을 재생성함. 이전의 모델은 버려버림.
+                myGameModel = new GameModel();    // 새 버튼을 누를 때마다 게임 모델을 재생성함. 이전의 모델은 버려버림.
                 // 랜덤으로 2를 2개 생성한다.
-                gameModel.accept(getBlankLocation());
+                myGameModel.accept(getBlankLocation());
                 // ?? 게임 모델의 상태를 이쪽에서 바꿔버리면 MVC 패턴을 사용하는 것에서 벗어나지 않는가..?
                 // 게임 모델의 상태를 여기서 NewNumber로 바꾸지 않으면, Running 상태에선 빈공간의 char 값을 받아도 무시하게 됨.
                 // 불확정적인 것은 모델 밖으로 빼야한다면... 모델 전체를 변경해야함..??
-                gameModel.gameState = GameModel.GameState.NewNumber; // ?? 문제의 부분
-                gameModel.accept(getBlankLocation());
+                myGameModel.gameState = GameModel.GameState.NewNumber; // ?? 문제의 부분
+                myGameModel.accept(getBlankLocation());
                 updateMyView();
+
+                if(battleMode){ //!!
+                    if(echoServer.connect(serverIP, serverPortNum, myNickName, peerNickName) == false) {
+                        gameResult = "Connection Error";
+                        executeUserCommand(UserCommand.Quit);
+                        return;
+                    }
+                }
             }
             catch (Exception e){
                 e.printStackTrace();
@@ -405,16 +544,31 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             try{
-                GameModel.GameState actionResult = gameModel.accept(savedKey);  // 키에 맞게 동작을 시킨다.
+                GameModel.GameState actionResult = myGameModel.accept(savedKey);  // 키에 맞게 동작을 시킨다.
+                if(battleMode){
+                    if(!echoServer.send(savedKey)){
+                        gameResult = "Connection Error!";
+                        executeUserCommand(UserCommand.Quit);
+                        return;
+                    }
+                }
                 switch (actionResult) {    // 동작의 결과인 gameState따라 추후 동작 결정.
                     case NewNumber: // 새 번호가 필요한 상태(내용물이 변함.)
-                        gameModel.accept(getBlankLocation());   // 빈 자리에 2를 생성함.
+                        char tempLocation = getBlankLocation();
+                        myGameModel.accept(tempLocation);   // 빈 자리에 2를 생성함.
+                        if(battleMode){
+                            if(!echoServer.send(tempLocation)){
+                                gameResult = "Connection Error!";
+                                executeUserCommand(UserCommand.Quit);
+                                return;
+                            }
+                        }
                         break;
                     case Finished:  // 종료상태(카운트 다 사용하면, Finished 상태를 리턴함.)
                         UserCommand cmd = UserCommand.Quit;
                         executeUserCommand(cmd);                // 종료 커맨드를 실행
                         System.out.println("Game Finished!");
-                        System.out.println("Your total score : " + gameModel.totalScore);
+                        System.out.println("Your total score : " + myGameModel.totalScore);
                         //return;
                 }
             }catch (Exception e){
@@ -429,11 +583,15 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             Log.d(TAG, "recover");
             updateMyView();
+            if(battleMode){
+                updateEnemyView();
+                modeBtn.setText("2");
+            }
             setButtonsState();
             newBtn.setText("P");
             //Toast.makeText(MainActivity.this, "Game Recovered!", Toast.LENGTH_SHORT).show();
             if (savedState == GameState.Running){   // 복구 전 상태가 진행중이었다면
-                mHandler.post(runnableResume);      // 게임 resume
+                hMyViews.post(runnableResume);      // 게임 resume
                 newBtn.setText("P");                // 버튼 갱신
             }
             else if (savedState == GameState.Paused)    // 멈춤 상태였다면
