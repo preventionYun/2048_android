@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EchoServer echoServer;
     private GameModel myGameModel, peerGameModel;
-    private boolean battleMode = true;
+    private boolean battleMode = false;
     private String gameResult = "You Win!";
 
 
@@ -224,6 +224,7 @@ public class MainActivity extends AppCompatActivity {
         downArrowBtn.setOnClickListener(OnClickListener);
         newBtn.setOnClickListener(OnClickListener);
         endBtn.setOnClickListener(OnClickListener);
+        modeBtn.setOnClickListener(OnClickListener);
 
         setButtonsState();
         echoServer = new EchoServer(hPeerViews, MainActivity.this);
@@ -310,6 +311,10 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.leftArrowBtn: savedKey = 'a'; cmd = UserCommand.Update; break;
                 case R.id.rightArrowBtn: savedKey = 'd'; cmd = UserCommand.Update; break;
                 case R.id.downArrowBtn: savedKey = 's'; cmd = UserCommand.Update; break;
+                case R.id.modeBtn:
+                    battleMode = !battleMode;
+                    if (battleMode) modeBtn.setText("2");
+                    else modeBtn.setText("1");
                 default: return;
             }
             // 위에서 눌린 버튼 종류, 게임의 상태를 고려하여 유저가 실행할 커맨드를 결정했음.

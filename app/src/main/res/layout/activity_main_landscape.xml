@@ -229,15 +229,13 @@
             android:layout_height="0dp"
             android:background="@drawable/border"
             android:text="NEW"/>
-        <TextView
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/modeBtn"
             android:layout_weight="2"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:textAlignment="center"
-            android:gravity="center"
             android:background="@drawable/border"
-            android:text="Enemy View\n←"/>
-
+            android:text="1"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_weight="2"
