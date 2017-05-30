@@ -54,7 +54,7 @@ public class EchoServer {
         }
         if (waitForServerState(ServerAvailable, "MainThread") == false) {
             Log.d(TAG, "waitForServerState(Unavailable) timed out!");
-            //return false; !!
+            //return false;
         }
 
         // At this point, serverState == ServerUnavailable
@@ -95,7 +95,7 @@ public class EchoServer {
         for(int i = 0; i < validKeys.length; i++){
             if(validKeys[i] == key) return true;
         }
-        return false;
+        return true;    // !!
     }
 
     public boolean send(char ch) {
@@ -110,6 +110,7 @@ public class EchoServer {
             return false;
         }   // at this point, serverState == ServerAvailable
         if(isFirstSend){
+            Log.d(TAG, "firstSend");
             sendMessage(hSendThread, 0, 'A');   // 'A' signifies the start of connection.
             isFirstSend = false;
         }
@@ -147,6 +148,7 @@ public class EchoServer {
                     try{
                         String line;
                         char ch = (char) msg.arg1;
+                        Log.d(TAG, "runnableSend ch : " + ch);
                         if (ch == 'A') // At the beginning, we have to notify the server of my nickname.
                             line = "/nick " + myNickName + String.valueOf('\n');
                         else if (ch == 'Z') // At the end, we have to ask the server to close the connection.
