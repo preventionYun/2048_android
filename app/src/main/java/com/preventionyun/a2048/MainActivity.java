@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private EchoServer echoServer;
     private GameModel myGameModel, peerGameModel;
     private boolean battleMode = false;
-    private String gameResult = "You Win!";
+    private String gameResult;
 
 
     private Button upArrowBtn, leftArrowBtn, rightArrowBtn, downArrowBtn;
@@ -91,13 +91,22 @@ public class MainActivity extends AppCompatActivity {
     private Handler hMyViews = new Handler();
     private Handler hPeerViews = new Handler() {    // 서버로부터 받은 메시지 어떻게 처리할 것인가?
         public void handleMessage(Message msg){
-            if(echoServer.isAvailable() == false) return;
+            if(echoServer.isAvailable() == false) {
+                // !!
+                // 테트리스와 다르게 이 게임은 한명이 끝났다고 끝내는 것이 아니다. 두 플레이어가 모두 끝난 것을 확인한 후 점수를 정산해야함.
+                // 지금은 Case : Finished에서 끝났다고 그냥 보내버림. -> Quit 커맨드 날림 -> 서버 종료 -> 상대방 확인 안하고 끝낸다.
+                // 따라서 Finished 경우에 Quit 대신 '??' (안겹치는 특정한 문자)를 보내서 상대방이 끝나길 기다리는 상태를 만든다.
+                // 그리고 상대방이 끝나면 점수를 정산해서 승부를 끝낸다.
+                // 물론 이 경우는 배틀모드인 경우에만 해당됨.
+                return;
+            }
             char key = (char) msg.arg1;
             GameModel.GameState state = GameModel.GameState.Finished;
             // 기존의 'Q'가 아닌 X인 이유는 newNumber 모드에서 빈 공간을 위한 값으로 B ~ Q가 생성되기 때문에, Q로 해버리면 서버와 연결을 끊어버리는 경우가 발생함.
             if(key == 'X'){     // 상대가 X를 보내면, 서로의 점수를 비교해서 승리를 판단한다.
-                gameResult = "You Win!";    // !!
-                updateEnemyView();
+                if(peerGameModel.totalScore < myGameModel.totalScore) gameResult = "이겼습니다!";
+                else if(peerGameModel.totalScore == myGameModel.totalScore) gameResult = "동점입니다!";
+                else gameResult = "패배했습니다!";
                 executeUserCommand(UserCommand.Win);
                 return;
             }
@@ -111,7 +120,6 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }else {
-                Log.d(TAG, "peer가 받은 key : " + key);
                 try {
                     state = peerGameModel.accept(key);  // Initial 단계가 아니라면 그냥 accept 처리하면 된다.
                     // Log.d(TAG, "hPeerViews. state : " + state);
@@ -152,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
     private void executeUserCommand(UserCommand cmd) {
         GameState prevState = myGameState;
         myGameState = GameState.fromInteger(stateMatrix[myGameState.value()][cmd.value()]); // stateMatrix를 통해 커맨드 실행 후 다음 상태를 갖고 옴
-        // !! gameState Error!!
         if(myGameState == GameState.Error){
             Log.d(TAG, "game state error! (state.cmd)=(" + prevState.value() + "," + cmd.value() + ")");
             myGameState = prevState;
@@ -534,7 +541,7 @@ public class MainActivity extends AppCompatActivity {
                 myGameModel.accept(randomLocation2 = getBlankLocation());
                 updateMyView();
 
-                if(battleMode){ // !!
+                if(battleMode){
                     if(echoServer.connect(serverIP, serverPortNum, myNickName, peerNickName) == false ||    // 서버 접속
                             echoServer.send(randomLocation1) == false ||                                    // 랜덤위치 전송
                             echoServer.send(randomLocation2) == false) {                                    // 2번째 랜덤위치
@@ -586,7 +593,7 @@ public class MainActivity extends AppCompatActivity {
                         char tempLocation = getBlankLocation();
                         myGameModel.accept(tempLocation);   // 빈 자리에 2를 생성함.
                         if(battleMode){
-                            if(!echoServer.send(tempLocation)){
+                            if(!echoServer.send(tempLocation)){ // 배틀모드라면 서버에도 보냄.
                                 gameResult = "Connection Error!";
                                 executeUserCommand(UserCommand.Quit);
                                 return;
@@ -599,7 +606,6 @@ public class MainActivity extends AppCompatActivity {
                         executeUserCommand(cmd);                // 종료 커맨드를 실행
                         System.out.println("Game Finished!");
                         System.out.println("Your total score : " + myGameModel.totalScore);
-                        if(battleMode) updateEnemyView();
                         //return;
                 }
             }catch (Exception e){

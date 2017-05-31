@@ -232,13 +232,6 @@
             android:layout_height="match_parent"
             android:background="@drawable/border"
             android:text="NEW"/>
-        <Button
-            android:id="@+id/modeBtn"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:background="@drawable/border"
-            android:text="1"/>
         <LinearLayout
             android:layout_weight="3"
             android:layout_width="0dp"
@@ -261,6 +254,13 @@
                 android:background="@drawable/border"
                 android:text="My View ↓"/>
         </LinearLayout>
+        <Button
+            android:id="@+id/modeBtn"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/border"
+            android:text="1"/>
         <Button
             android:id="@+id/endBtn"
             android:layout_weight="1"
