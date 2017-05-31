@@ -202,7 +202,7 @@ public class GameModel implements Serializable{
 	}
 	class OnNewNumber implements ActionHandler, Serializable {
 		public int run(GameModel gm, char key){
-			int temp = (int)(key - 'A');	// int형으로 변환을 시키고... // !!
+			int temp = (int)(key - 'B');	// int형으로 변환을 시키고... // !!
 			// aceept의 인자로 2차원 행렬 -> 1차원 행렬로 바꿔서 인덱스를 보냈음. 반대 과정을 거쳐서 행과 열을 알아낸다.
 			int row = temp / 4;		// 반대 과정을 거쳐서 행	
 			int col = temp % 4;		// 반대 과정을 거쳐서 열

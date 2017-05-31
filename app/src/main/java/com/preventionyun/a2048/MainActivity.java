@@ -486,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
             y = (char) ('0' + random.nextInt(4));
             if (myGameModel.screen.get_array()[x - '0'][y - '0'] == 0) {    // 매트릭스에서 랜덤으로 빈 곳을 발견.
                 Log.d(TAG, "빈 위치 발견 - x축 : " + x + " y축 : " + y);
-                return (char) ('A' + (y - '0') * myGameModel.arrayLength + (x - '0'));  // !!
+                return (char) ('B' + (y - '0') * myGameModel.arrayLength + (x - '0'));  // B를 더하는 이유는 서버에서 A는 닉네임 설정하는 부분이라서..
             }
         }
     }
