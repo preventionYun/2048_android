@@ -94,8 +94,10 @@ public class MainActivity extends AppCompatActivity {
             if(echoServer.isAvailable() == false) return;
             char key = (char) msg.arg1;
             GameModel.GameState state = GameModel.GameState.Finished;
-            if(key == 'Q'){     // 상대가 Q를 보내면, 서로의 점수를 비교해서 승리를 판단한다.
+            // 기존의 'Q'가 아닌 X인 이유는 newNumber 모드에서 빈 공간을 위한 값으로 B ~ Q가 생성되기 때문에, Q로 해버리면 서버와 연결을 끊어버리는 경우가 발생함.
+            if(key == 'X'){     // 상대가 X를 보내면, 서로의 점수를 비교해서 승리를 판단한다.
                 gameResult = "You Win!";    // !!
+                updateEnemyView();
                 executeUserCommand(UserCommand.Win);
                 return;
             }
@@ -120,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 updateEnemyView();                          // 화면 갱신
             }
 
-            /* 테트리스와 다르게 이 게임에서는 여기서 종료조건을 검사할 필요가 없음. 알아서 카운트 줄어들면 Q가 되니까...
+            /* 테트리스와 다르게 이 게임에서는 여기서 종료조건을 검사할 필요가 없음. 알아서 카운트 줄어들면 X가 되니까...
             if(state == GameModel.GameState.Finished) {
                 Log.d(TAG, "GameFinished");
                 executeUserCommand(UserCommand.Win);
@@ -157,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         switch (cmd.value()){
-            // NOP(-1), Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5)
+            // NOP(-1), Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5), Win(6)
             case 0: hMyViews.post(runnableQuit); break;
             case 1: hMyViews.post(runnableStart); break;
             case 2: hMyViews.post(runnablePause); break;
@@ -249,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
         if(battleMode && echoServer.isAvailable()){
-            echoServer.send('Q');
+            echoServer.send('X');
             echoServer.disconnect();
         }
     }
@@ -317,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
                     else if (myGameState == GameState.Paused) cmd = UserCommand.Resume;      // Paused 면 'N'은 'R'모양을 함.
                     break;
                 case R.id.endBtn:
-                    savedKey = 'Q';
+                    savedKey = 'X';
                     if (myGameState == GameState.Running) cmd = UserCommand.Quit;
                     else if (myGameState == GameState.Paused) cmd = UserCommand.Quit;
                     break;
@@ -509,7 +511,7 @@ public class MainActivity extends AppCompatActivity {
             newBtn.setText("NEW");
             //Toast.makeText(MainActivity.this, "Game Over!", Toast.LENGTH_SHORT).show();
             if(battleMode && echoServer.isAvailable()){
-                echoServer.send('Q');
+                echoServer.send('X');
                 echoServer.disconnect();
                 initPeerGame();
             }
@@ -592,10 +594,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                         break;
                     case Finished:  // 종료상태(카운트 다 사용하면, Finished 상태를 리턴함.)
+                        Log.d(TAG, "count 모두 사용, 종료합니다.");
                         UserCommand cmd = UserCommand.Quit;
                         executeUserCommand(cmd);                // 종료 커맨드를 실행
                         System.out.println("Game Finished!");
                         System.out.println("Your total score : " + myGameModel.totalScore);
+                        if(battleMode) updateEnemyView();
                         //return;
                 }
             }catch (Exception e){
