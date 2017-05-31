@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
             myTextView9, myTextView10, myTextView11, myTextView12,
             myTextView13, myTextView14, myTextView15, myTextView16;
     private TextView myScore, myCount;
+    private TextView peerScore, peerCount;
     //private android.os.Handler mHandler;
 
     private GameState myGameState = GameState.Initial;
@@ -88,38 +89,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private Handler hMyViews = new Handler();
-    private Handler hPeerViews = new Handler() {
+    private Handler hPeerViews = new Handler() {    // 서버로부터 받은 메시지 어떻게 처리할 것인가?
         public void handleMessage(Message msg){
             if(echoServer.isAvailable() == false) return;
             char key = (char) msg.arg1;
             GameModel.GameState state = GameModel.GameState.Finished;
-            if(key == 'Q'){
-                gameResult = "You Win!";
+            if(key == 'Q'){     // 상대가 Q를 보내면, 서로의 점수를 비교해서 승리를 판단한다.
+                gameResult = "You Win!";    // !!
                 executeUserCommand(UserCommand.Win);
                 return;
             }
-
             if(peerGameState == GameState.Initial) {         // 적의 게임 모델이 생성이 안되있는 상태라면
                 try {
                     peerGameModel = new GameModel();        // 게임 모델 생성
-                    peerGameModel.accept(key);
-                    peerGameModel.gameState = GameModel.GameState.NewNumber;
-                    peerGameState = GameState.Running;
+                    peerGameModel.accept(key);              // key를 받는다. (2가 생성될 좌표)
+                    peerGameModel.gameState = GameModel.GameState.NewNumber;    // Initial 단계에서만 2를 2번 생성하기 때문에 예외적으로 상태 변경
+                    peerGameState = GameState.Running;      // 게임 상태 변경
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }else {
                 Log.d(TAG, "peer가 받은 key : " + key);
                 try {
-                    state = peerGameModel.accept(key);
+                    state = peerGameModel.accept(key);  // Initial 단계가 아니라면 그냥 accept 처리하면 된다.
+                    // Log.d(TAG, "hPeerViews. state : " + state);
                 }       // 키 accept
                 catch (Exception e) {
                     e.printStackTrace();
                 }
                 updateEnemyView();                          // 화면 갱신
             }
-            if(state == GameModel.GameState.Finished)
+
+            /* 테트리스와 다르게 이 게임에서는 여기서 종료조건을 검사할 필요가 없음. 알아서 카운트 줄어들면 Q가 되니까...
+            if(state == GameModel.GameState.Finished) {
+                Log.d(TAG, "GameFinished");
                 executeUserCommand(UserCommand.Win);
+            }
+            */
+
             return ;
         };
     };
@@ -221,6 +228,8 @@ public class MainActivity extends AppCompatActivity {
 
         myCount = (TextView)findViewById(R.id.myCount);
         myScore = (TextView)findViewById(R.id.myScore);
+        peerCount = (TextView)findViewById(R.id.peerCount);
+        peerScore = (TextView)findViewById(R.id.peerScore);
 
         // 리스너 등록
         upArrowBtn.setOnClickListener(OnClickListener);
@@ -462,8 +471,8 @@ public class MainActivity extends AppCompatActivity {
         if(peerGameModel.screen.get_array()[3][3] == 0) enemyTextView16.setText("");
         else enemyTextView16.setText("" + peerGameModel.screen.get_array()[3][3]);
 
-        myScore.setText("" + peerGameModel.totalScore);
-        myCount.setText("" + peerGameModel.count);
+        peerScore.setText("" + peerGameModel.totalScore);
+        peerCount.setText("" + peerGameModel.count);
     }
 
     private char getBlankLocation(){
