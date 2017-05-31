@@ -10,7 +10,7 @@ public class GameModel implements Serializable{
 		public int value() { return value; }
 	}
 
-	final static boolean debugMode = false;
+	final static boolean debugMode = true;
 	public final static int arrayLength = 4;	// 정방행렬 사이즈 어떻게 할 것인가?
 	public int count = 20;	// 게임 목숨
 	public int totalScore = 0;
@@ -69,7 +69,7 @@ public class GameModel implements Serializable{
 		if(newNumberNeeded){	// 단축키 조작 결과로 새로운 숫자가 필요한 상황인가 체크
 			gameState = GameState.NewNumber;	// 상태변경
 		}else{
-			screen.print();		// 새로운 상태가 필요한 경우라면 지금 화면을 갱신할 필요는 없음.
+			//screen.print();		// 새로운 상태가 필요한 경우라면 지금 화면을 갱신할 필요는 없음.
 		}
 		
 		if(count == 0) gameState = GameState.Finished;	// 카운트가 다 떨어졌다면 종료
@@ -202,7 +202,7 @@ public class GameModel implements Serializable{
 	}
 	class OnNewNumber implements ActionHandler, Serializable {
 		public int run(GameModel gm, char key){
-			int temp = (int)key;	// int형으로 변환을 시키고...
+			int temp = (int)(key - 'A');	// int형으로 변환을 시키고... // !!
 			// aceept의 인자로 2차원 행렬 -> 1차원 행렬로 바꿔서 인덱스를 보냈음. 반대 과정을 거쳐서 행과 열을 알아낸다.
 			int row = temp / 4;		// 반대 과정을 거쳐서 행	
 			int col = temp % 4;		// 반대 과정을 거쳐서 열

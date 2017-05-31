@@ -54,7 +54,7 @@ public class EchoServer {
         }
         if (waitForServerState(ServerAvailable, "MainThread") == false) {
             Log.d(TAG, "waitForServerState(Unavailable) timed out!");
-            //return false;
+            // return false;    // !!
         }
 
         // At this point, serverState == ServerUnavailable
@@ -205,6 +205,7 @@ public class EchoServer {
                     }
                 }
             } catch (Exception e){  // abnormal close
+                e.printStackTrace();
                 Log.d(TAG, "Socket closed abnormally");
             }
             resetServerStateFlag(flagConnected);

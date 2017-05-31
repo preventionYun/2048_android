@@ -98,42 +98,26 @@ public class MainActivity extends AppCompatActivity {
                 executeUserCommand(UserCommand.Win);
                 return;
             }
-            /*
-            if(peerGameState == GameState.Initial){         // Initial 상태인 경우
+
+            if(peerGameState == GameState.Initial) {         // 적의 게임 모델이 생성이 안되있는 상태라면
                 try {
-                    peerGameModel = new GameModel();        // GameModel을 새로 생성
-                    Log.d(TAG, "hPeerViews, key : " + key);
-
-                    // 적 화면 갱신
-                    peerGameModel.accept(getBlankLocation());
-                    // ?? 게임 모델의 상태를 이쪽에서 바꿔버리면 MVC 패턴을 사용하는 것에서 벗어나지 않는가..?
-                    // 게임 모델의 상태를 여기서 NewNumber로 바꾸지 않으면, Running 상태에선 빈공간의 char 값을 받아도 무시하게 됨.
-                    // 불확정적인 것은 모델 밖으로 빼야한다면... 모델 전체를 변경해야함..??
-                    peerGameModel.gameState = GameModel.GameState.NewNumber; // ?? 문제의 부분
-                    peerGameModel.accept(getBlankLocation());
-                    updateEnemyView();
-                    //state = peerGameModel.accept(key);
-
-                }catch (Exception e) {
+                    peerGameModel = new GameModel();        // 게임 모델 생성
+                    peerGameModel.accept(key);
+                    peerGameModel.gameState = GameModel.GameState.NewNumber;
+                    peerGameState = GameState.Running;
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-                updateEnemyView();
-                peerGameState = GameState.Running;
-            }
-            else{
-                try{
+            }else {
+                Log.d(TAG, "peer가 받은 key : " + key);
+                try {
                     state = peerGameModel.accept(key);
+                }       // 키 accept
+                catch (Exception e) {
+                    e.printStackTrace();
                 }
-                catch (Exception e) { e.printStackTrace(); }
-                updateEnemyView();
-                if(state == GameModel.GameState.Finished)
-                    executeUserCommand(UserCommand.Win);
+                updateEnemyView();                          // 화면 갱신
             }
-            return;
-            */
-            try{ state = peerGameModel.accept(key); }
-            catch (Exception e) { e.printStackTrace(); }
-            updateEnemyView();
             if(state == GameModel.GameState.Finished)
                 executeUserCommand(UserCommand.Win);
             return ;
@@ -159,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
     private void executeUserCommand(UserCommand cmd) {
         GameState prevState = myGameState;
         myGameState = GameState.fromInteger(stateMatrix[myGameState.value()][cmd.value()]); // stateMatrix를 통해 커맨드 실행 후 다음 상태를 갖고 옴
+        // !! gameState Error!!
         if(myGameState == GameState.Error){
             Log.d(TAG, "game state error! (state.cmd)=(" + prevState.value() + "," + cmd.value() + ")");
             myGameState = prevState;
@@ -477,8 +462,8 @@ public class MainActivity extends AppCompatActivity {
         if(peerGameModel.screen.get_array()[3][3] == 0) enemyTextView16.setText("");
         else enemyTextView16.setText("" + peerGameModel.screen.get_array()[3][3]);
 
-        myScore.setText("" + myGameModel.totalScore);
-        myCount.setText("" + myGameModel.count);
+        myScore.setText("" + peerGameModel.totalScore);
+        myCount.setText("" + peerGameModel.count);
     }
 
     private char getBlankLocation(){
@@ -492,13 +477,14 @@ public class MainActivity extends AppCompatActivity {
             y = (char) ('0' + random.nextInt(4));
             if (myGameModel.screen.get_array()[x - '0'][y - '0'] == 0) {    // 매트릭스에서 랜덤으로 빈 곳을 발견.
                 Log.d(TAG, "빈 위치 발견 - x축 : " + x + " y축 : " + y);
-                return (char) ((y - '0') * myGameModel.arrayLength + (x - '0'));
+                return (char) ('A' + (y - '0') * myGameModel.arrayLength + (x - '0'));  // !!
             }
         }
     }
 
     private Runnable runnableWin = new Runnable() {
         public void run() {
+            Log.d(TAG, "runnableWin");
             setButtonsState();
             if(battleMode && echoServer.isAvailable()){
                 echoServer.disconnect();
@@ -509,6 +495,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Runnable runnableQuit = new Runnable() {
         public void run() {
+            Log.d(TAG, "runnableQuit");
             setButtonsState();
             newBtn.setText("NEW");
             //Toast.makeText(MainActivity.this, "Game Over!", Toast.LENGTH_SHORT).show();
@@ -523,43 +510,27 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             try{
+                char randomLocation1;
+                char randomLocation2;
+
                 myGameModel = new GameModel();    // 새 버튼을 누를 때마다 게임 모델을 재생성함. 이전의 모델은 버려버림.
                 // 랜덤으로 2를 2개 생성한다.
-                myGameModel.accept(getBlankLocation());
+                myGameModel.accept(randomLocation1 = getBlankLocation());
                 // ?? 게임 모델의 상태를 이쪽에서 바꿔버리면 MVC 패턴을 사용하는 것에서 벗어나지 않는가..?
                 // 게임 모델의 상태를 여기서 NewNumber로 바꾸지 않으면, Running 상태에선 빈공간의 char 값을 받아도 무시하게 됨.
                 // 불확정적인 것은 모델 밖으로 빼야한다면... 모델 전체를 변경해야함..??
                 myGameModel.gameState = GameModel.GameState.NewNumber; // ?? 문제의 부분
-                myGameModel.accept(getBlankLocation());
+                myGameModel.accept(randomLocation2 = getBlankLocation());
                 updateMyView();
 
-                if(battleMode){
-                    if(echoServer.connect(serverIP, serverPortNum, myNickName, peerNickName) == false) {
+                if(battleMode){ // !!
+                    if(echoServer.connect(serverIP, serverPortNum, myNickName, peerNickName) == false ||    // 서버 접속
+                            echoServer.send(randomLocation1) == false ||                                    // 랜덤위치 전송
+                            echoServer.send(randomLocation2) == false) {                                    // 2번째 랜덤위치
                         Log.d(TAG, "runnableStart Error..");
                         gameResult = "Connection Error";
                         executeUserCommand(UserCommand.Quit);
                         return;
-                    }
-
-                    // !!
-                    if(peerGameState == GameState.Initial){         // Initial 상태인 경우
-                        try {
-                            peerGameModel = new GameModel();        // GameModel을 새로 생성
-                            // 적 화면 갱신
-                            peerGameModel.accept(getBlankLocation());
-                            // ?? 게임 모델의 상태를 이쪽에서 바꿔버리면 MVC 패턴을 사용하는 것에서 벗어나지 않는가..?
-                            // 게임 모델의 상태를 여기서 NewNumber로 바꾸지 않으면, Running 상태에선 빈공간의 char 값을 받아도 무시하게 됨.
-                            // 불확정적인 것은 모델 밖으로 빼야한다면... 모델 전체를 변경해야함..??
-                            peerGameModel.gameState = GameModel.GameState.NewNumber; // ?? 문제의 부분
-                            peerGameModel.accept(getBlankLocation());
-                            updateEnemyView();
-                            //state = peerGameModel.accept(key);
-
-                        }catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        updateEnemyView();
-                        peerGameState = GameState.Running;
                     }
                 }
             }
