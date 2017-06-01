@@ -90,12 +90,13 @@ public class EchoServer {
         }
         return true;
     }
-    private char validKeys[] = { 'a', 'd', 's', 'w', ' ', '0', '1', '2', '3', '4', '5', '6', 'Q'};
+    private char validKeys[] = { 'a', 'd', 's', 'w', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+                                'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'W', 'X'};
     private boolean isValidKey(char key){
         for(int i = 0; i < validKeys.length; i++){
             if(validKeys[i] == key) return true;
         }
-        return true;    // !!
+        return false;
     }
 
     public boolean send(char ch) {

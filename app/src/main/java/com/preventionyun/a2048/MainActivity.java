@@ -462,7 +462,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private Runnable runnableWin = new Runnable() { //!!
+    private Runnable runnableWin = new Runnable() {
         public void run() {
             Log.d(TAG, "runnableWin");
             setButtonsState();
@@ -472,7 +472,7 @@ public class MainActivity extends AppCompatActivity {
             else gameResult = "패배했습니다!";
 
             Toast.makeText(MainActivity.this, gameResult, Toast.LENGTH_SHORT).show();   // 결과 메시지 창을 띄운다.
-            /*
+            /*  어짜피 통신이 끊어지니까 필요가 없음.. ?? 테스트하기.
             if(!echoServer.send(WAITING)){ // 상대방에게도 내 게임이 끝났다는 신호를 보내서, 종료하도록 유도한다.
                 gameResult = "Connection Error!";
                 executeUserCommand(UserCommand.Quit);
@@ -573,9 +573,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                         break;
                     case Finished:  // 종료상태(카운트 다 사용하면, Finished 상태를 리턴함.)
-                        // !!
                         if(battleMode){ // 배틀모드인 경우에는 Quit 커맨드를 보내는 것이 아니라, 나는 상대방을 기다리고 있다는 것을 알려줘야한다.
                             myFinishedFlag = true;
+                            // 조작키 비활성화
+                            upArrowBtn.setEnabled(false);
+                            leftArrowBtn.setEnabled(false);
+                            rightArrowBtn.setEnabled(false);
+                            downArrowBtn.setEnabled(false);
                             if(!echoServer.send(WAITING)){
                                 gameResult = "Connection Error!";
                                 executeUserCommand(UserCommand.Quit);
