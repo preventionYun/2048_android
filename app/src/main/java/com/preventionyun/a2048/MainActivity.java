@@ -1,5 +1,6 @@
 package com.preventionyun.a2048;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -19,6 +20,7 @@ import java.util.Random;
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = "MainACtivity";
     // 서버 관련
+    private final int reqCode4SettingActivity = 0;
     private String serverIP = "10.0.2.2";
     private int serverPortNum = 8080;
     private String myNickName = "me";
@@ -39,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private String gameResult;
 
     private Button upArrowBtn, leftArrowBtn, rightArrowBtn, downArrowBtn;
-    private Button newBtn, modeBtn, endBtn;
+    private Button newBtn, modeBtn, endBtn, settingBtn;
     private TextView enemyTextView1, enemyTextView2, enemyTextView3, enemyTextView4,
             enemyTextView5, enemyTextView6, enemyTextView7, enemyTextView8,
             enemyTextView9, enemyTextView10, enemyTextView11, enemyTextView12,
@@ -169,7 +171,8 @@ public class MainActivity extends AppCompatActivity {
         boolean otherFlag = buttonState[myGameState.value()][2];  // 키 조작
         newBtn.setEnabled(startFlag);
         endBtn.setEnabled(pausedFlag);
-        modeBtn.setEnabled(startFlag && !pausedFlag);
+        // 세팅키
+        settingBtn.setEnabled(startFlag && !pausedFlag);    // 시작안했고, 멈춤 상태인 경우 활성화
         // 조작키
         upArrowBtn.setEnabled(otherFlag);
         leftArrowBtn.setEnabled(otherFlag);
@@ -220,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
         newBtn = (Button) findViewById(R.id.newBtn);
         modeBtn = (Button) findViewById(R.id.modeBtn);
         endBtn = (Button) findViewById(R.id.endBtn);
+        settingBtn = (Button) findViewById(R.id.settingBtn);
 
         enemyTextView1 = (TextView)findViewById(R.id.enemyTextView1);
         enemyTextView2 = (TextView)findViewById(R.id.enemyTextView2);
@@ -268,6 +272,7 @@ public class MainActivity extends AppCompatActivity {
         newBtn.setOnClickListener(OnClickListener);
         endBtn.setOnClickListener(OnClickListener);
         modeBtn.setOnClickListener(OnClickListener);
+        settingBtn.setOnClickListener(OnClickListener);
 
         setButtonsState();
         echoServer = new EchoServer(hPeerViews, MainActivity.this);
@@ -353,6 +358,11 @@ public class MainActivity extends AppCompatActivity {
                     battleMode = !battleMode;
                     if (battleMode) modeBtn.setText("2");
                     else modeBtn.setText("1");
+                    return;
+                case R.id.settingBtn:
+                    Log.d(TAG, "settingBtn click");
+                    if (myGameState == GameState.Initial) startSettingActivity(reqCode4SettingActivity);
+                    return;
                 default: return;
             }
             // 위에서 눌린 버튼 종류, 게임의 상태를 고려하여 유저가 실행할 커맨드를 결정했음.
@@ -607,4 +617,30 @@ public class MainActivity extends AppCompatActivity {
                 newBtn.setText("R");                    // 버튼만 갱신
         }
     };
+
+    private void startSettingActivity(int reqCode){
+        Intent intent = new Intent(MainActivity.this, SettingActivity.class);
+        intent.putExtra("serverHostName", serverIP);
+        intent.putExtra("serverPortNum", String.valueOf(serverPortNum));
+        intent.putExtra("myNickName", myNickName);
+        intent.putExtra("peerNickName", peerNickName);
+        startActivityForResult(intent, reqCode);
+    }
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        switch (requestCode){
+            case reqCode4SettingActivity:
+                if(resultCode == RESULT_OK){
+                    serverIP = data.getStringExtra("serverHostName");
+                    String s = data.getStringExtra("serverPortNum");
+                    serverPortNum = Integer.parseInt(s);
+                    myNickName = data.getStringExtra("myNickName");
+                    peerNickName = data.getStringExtra("peerNickName");
+                    Log.d(TAG, "SettingActivity returned (" + serverIP + ", " + serverPortNum + ")");
+                }
+                else if(resultCode == RESULT_CANCELED){
+                    Log.d(TAG, "SettingActivity canceled");
+                }
+                break;
+        }
+    }
 }
