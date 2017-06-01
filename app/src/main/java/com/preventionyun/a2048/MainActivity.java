@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.preventionyun.a2048.gameModel.GameModel;
 
@@ -23,11 +24,19 @@ public class MainActivity extends AppCompatActivity {
     private String myNickName = "me";
     private String peerNickName = "me";
 
+    // 상태를 표현하는 char
+    private final static char QUIT = 'X';   // Quit 명령어는 X
+    // 기존의 'Q'가 아닌 X인 이유는 newNumber 모드에서 빈 공간을 위한 값으로 B ~ Q가 생성되기 때문에, Q로 해버리면 서버와 연결을 끊어버리는 경우가 발생함.
+    private final static char WAITING = 'W';   // Waiting 명령어는 W
+
+    // 배틀모드에서는 서로가 게임이 끝나야 점수를 정산하고 끝낸다.
+    boolean myFinishedFlag = false;
+    boolean peerFinishedFlag = false;
+
     private EchoServer echoServer;
     private GameModel myGameModel, peerGameModel;
     private boolean battleMode = false;
     private String gameResult;
-
 
     private Button upArrowBtn, leftArrowBtn, rightArrowBtn, downArrowBtn;
     private Button newBtn, modeBtn, endBtn;
@@ -41,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
             myTextView13, myTextView14, myTextView15, myTextView16;
     private TextView myScore, myCount;
     private TextView peerScore, peerCount;
-    //private android.os.Handler mHandler;
 
     private GameState myGameState = GameState.Initial;
     private GameState peerGameState = GameState.Initial;
@@ -73,7 +81,8 @@ public class MainActivity extends AppCompatActivity {
 
     int stateMatrix[][] = { // stateMatrix[currState][userCmd] -> nextState
             // Quit(0), Start(1), Pause(2), Resume(3), Update(4), Recover(5), Win(6)
-            /*Initial(0)*/{ -1, 1, -1, -1, -1, 2, 0},   // [Initial][Start] -> Running, [Initial][Recover] -> Paused
+            // !!
+            /*Initial(0)*/{ 0, 1, -1, -1, -1, 2, 0},   // [Initial][Start] -> Running, [Initial][Recover] -> Paused
             /*Running(1)*/{ 0, -1, 2, -1, 1, -1, 0},     // [Running][Quit] -> Initial, [Running][Pause] -> Paused, [Running][Update] -> Running
             /*Paused (2)*/{ 0, 1, -1, 1, 2, -1, -1},      // [Paused][Quit] -> Initial, [Paused][Started,Resume] -> Running, [Paused][Update] -> Paused
     };
@@ -86,28 +95,39 @@ public class MainActivity extends AppCompatActivity {
 
     private void initPeerGame(){
         peerGameState = GameState.Initial;
+        myFinishedFlag = false;
+        peerFinishedFlag = false;
     }
 
+    /*
+        테트리스와 다르게 이 게임은 한명이 끝났다고 끝내는 것이 아니다. 두 플레이어가 모두 끝난 것을 확인한 후 점수를 정산해야함.
+        지금은 Case : Finished에서 끝났다고 그냥 보내버림. -> Quit 커맨드 날림 -> 서버 종료 -> 상대방 확인 안하고 끝낸다.
+        따라서 Finished 경우에 Quit 대신 '??' (안겹치는 특정한 문자)를 보내서 상대방이 끝나길 기다리는 상태를 만든다.
+        그리고 상대방이 끝나면 점수를 정산해서 승부를 끝낸다.
+        물론 이 경우는 배틀모드인 경우에만 해당됨.
+        종료조건
+        1. 내가 먼저 끝나고 기다리는 경우 상대방이 먼저 끝나고 내가 끝나는 경우
+        2. 상대방이 끝났다는 메시지를 보내고 내가 종료하길 기다리는 경우
+    */
     private Handler hMyViews = new Handler();
     private Handler hPeerViews = new Handler() {    // 서버로부터 받은 메시지 어떻게 처리할 것인가?
         public void handleMessage(Message msg){
             if(echoServer.isAvailable() == false) {
-                // !!
-                // 테트리스와 다르게 이 게임은 한명이 끝났다고 끝내는 것이 아니다. 두 플레이어가 모두 끝난 것을 확인한 후 점수를 정산해야함.
-                // 지금은 Case : Finished에서 끝났다고 그냥 보내버림. -> Quit 커맨드 날림 -> 서버 종료 -> 상대방 확인 안하고 끝낸다.
-                // 따라서 Finished 경우에 Quit 대신 '??' (안겹치는 특정한 문자)를 보내서 상대방이 끝나길 기다리는 상태를 만든다.
-                // 그리고 상대방이 끝나면 점수를 정산해서 승부를 끝낸다.
-                // 물론 이 경우는 배틀모드인 경우에만 해당됨.
                 return;
             }
             char key = (char) msg.arg1;
             GameModel.GameState state = GameModel.GameState.Finished;
-            // 기존의 'Q'가 아닌 X인 이유는 newNumber 모드에서 빈 공간을 위한 값으로 B ~ Q가 생성되기 때문에, Q로 해버리면 서버와 연결을 끊어버리는 경우가 발생함.
-            if(key == 'X'){     // 상대가 X를 보내면, 서로의 점수를 비교해서 승리를 판단한다.
-                if(peerGameModel.totalScore < myGameModel.totalScore) gameResult = "이겼습니다!";
-                else if(peerGameModel.totalScore == myGameModel.totalScore) gameResult = "동점입니다!";
-                else gameResult = "패배했습니다!";
-                executeUserCommand(UserCommand.Win);
+            if(key == WAITING){
+                Log.d(TAG, "상대방이 게임이 끝났다는 신호를 보냄.");
+                peerFinishedFlag = true;
+                if(myFinishedFlag && peerFinishedFlag){ // 양쪽이 게임이 끝난 상태
+                    Log.d(TAG,"양쪽이 모두 게임이 끝났습니다. 점수를 정산합니다.");
+                    executeUserCommand(UserCommand.Win);    // Win 커맨드를 보낸다. Win은 게임점수를 정산하고 승자를 결정한 후 Quit 커맨드 보낸다.
+                    return;
+                }
+            }
+            if(key == QUIT){
+                executeUserCommand(UserCommand.Quit);
                 return;
             }
             if(peerGameState == GameState.Initial) {         // 적의 게임 모델이 생성이 안되있는 상태라면
@@ -258,19 +278,17 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
         if(battleMode && echoServer.isAvailable()){
-            echoServer.send('X');
+            echoServer.send(QUIT);
             echoServer.disconnect();
         }
     }
-
-
     @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
         // onPause가 불리는 순간
-        savedState = myGameState;                     // 게임의 상태변수를 저장함.
-        if (myGameState == GameState.Running)         // Running 상태였다면,
+        savedState = myGameState;                   // 게임의 상태변수를 저장함.
+        if (myGameState == GameState.Running)       // Running 상태였다면,
             executeUserCommand(UserCommand.Pause);  // Pause 커맨드
     }
     @Override
@@ -281,7 +299,6 @@ public class MainActivity extends AppCompatActivity {
         if (savedState == GameState.Running)        // 저장된 상태가 Running이었다면,
             executeUserCommand(UserCommand.Resume); // Resume 커맨드 (홈 화면에 갔다오거나, 전화 등이 와서 멈추었다가 다시 돌아온 상태)
     }
-
     @Override
     protected void onSaveInstanceState(Bundle outState){
         super.onSaveInstanceState(outState);
@@ -309,8 +326,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-    // 어떻게 동작할 것인가, 정의
     private View.OnClickListener OnClickListener = new View.OnClickListener(){
         public void onClick(View v) {
             int id = v.getId();
@@ -326,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
                     else if (myGameState == GameState.Paused) cmd = UserCommand.Resume;      // Paused 면 'N'은 'R'모양을 함.
                     break;
                 case R.id.endBtn:
-                    savedKey = 'X';
+                    savedKey = QUIT;
                     if (myGameState == GameState.Running) cmd = UserCommand.Quit;
                     else if (myGameState == GameState.Paused) cmd = UserCommand.Quit;
                     break;
@@ -344,69 +359,6 @@ public class MainActivity extends AppCompatActivity {
             executeUserCommand(cmd);    // 커맨드를 실행
         }
     };
-    /*
-    private View.OnClickListener OnClickListener = new View.OnClickListener(){
-        public void onClick(View v){
-            char key;
-            int id = v.getId();
-            switch (id) {   // 눌린 버튼의 종류에 따라서 다르게 동작한다.
-                case R.id.upArrowBtn : key = 'w'; break;
-                case R.id.leftArrowBtn : key = 'a'; break;
-                case R.id.rightArrowBtn : key = 'd'; break;
-                case R.id.downArrowBtn : key = 's'; break;
-                case R.id.newBtn :
-                    try {
-                        Log.d(TAG, "게임 모델 생성");
-                        gameModel = new GameModel();    // 새 버튼을 누를 때마다 게임 모델을 재생성함. 이전의 모델은 버려버림.
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
-                    key = 'n';
-                    isGameStarted = true;
-                    setButtonsState(isGameStarted);
-                    try {
-                        // 랜덤으로 2를 2개 생성한다.
-                        gameModel.accept(getBlankLocation());
-                        // ?? 게임 모델의 상태를 이쪽에서 바꿔버리면 MVC 패턴을 사용하는 것에서 벗어나지 않는가..?
-                        // 게임 모델의 상태를 여기서 NewNumber로 바꾸지 않으면, Running 상태에선 빈공간의 char 값을 받아도 무시하게 됨.
-                        // 불확정적인 것은 모델 밖으로 빼야한다면... 모델 전체를 변경해야함..??
-                        gameModel.gameState = GameModel.GameState.NewNumber; // ?? 문제의 부분
-                        gameModel.accept(getBlankLocation());
-                    }catch (Exception e){
-                        Log.d(TAG, "newBtn 에러 발생");
-                        e.printStackTrace();
-                    }
-                    break;
-                case R.id.endBtn :
-                    key = 'e';
-                    isGameStarted = false;
-                    setButtonsState(isGameStarted);
-                    break;
-                default: return;
-            }
-            Log.d(TAG, "눌린 버튼 : " + key);
-            try {
-                gameState = gameModel.accept(key);  // 키에 맞게 동작을 시킨다.
-                switch (gameState) {    // 동작의 결과인 gameState따라 추후 동작 결정.
-                    case NewNumber: // 새 번호가 필요한 상태
-                        gameModel.accept(getBlankLocation());   // 빈 자리에 2를 생성함.
-                        break;
-
-                    case Finished:  // 종료상태(카운트 다 사용함)
-                        isGameStarted = false;
-                        setButtonsState(isGameStarted);
-                        System.out.println("Game Finished!");
-                        System.out.println("Your total score : " + gameModel.totalScore);
-                        //return;
-                }
-            }catch (Exception e){
-                Log.d(TAG, "Exception 발생");
-                e.printStackTrace();
-            }
-            updateMyView(); // 화면 갱신
-        }
-    };
-    */
 
     public void updateMyView(){
         if(myGameModel.screen.get_array()[0][0] == 0) myTextView1.setText("");
@@ -500,14 +452,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private Runnable runnableWin = new Runnable() {
+    private Runnable runnableWin = new Runnable() { //!!
         public void run() {
             Log.d(TAG, "runnableWin");
             setButtonsState();
-            if(battleMode && echoServer.isAvailable()){
-                echoServer.disconnect();
-                initPeerGame();
+
+            if(peerGameModel.totalScore < myGameModel.totalScore) gameResult = "이겼습니다!";
+            else if(peerGameModel.totalScore == myGameModel.totalScore) gameResult = "동점입니다!";
+            else gameResult = "패배했습니다!";
+
+            Toast.makeText(MainActivity.this, gameResult, Toast.LENGTH_SHORT).show();   // 결과 메시지 창을 띄운다.
+            /*
+            if(!echoServer.send(WAITING)){ // 상대방에게도 내 게임이 끝났다는 신호를 보내서, 종료하도록 유도한다.
+                gameResult = "Connection Error!";
+                executeUserCommand(UserCommand.Quit);
+                return;
             }
+            */
+            executeUserCommand(UserCommand.Quit);   // Quit 커맨드를 실행하여 서버를 종료하도록 한다.
         }
     };
 
@@ -518,7 +480,7 @@ public class MainActivity extends AppCompatActivity {
             newBtn.setText("NEW");
             //Toast.makeText(MainActivity.this, "Game Over!", Toast.LENGTH_SHORT).show();
             if(battleMode && echoServer.isAvailable()){
-                echoServer.send('X');
+                echoServer.send(QUIT);
                 echoServer.disconnect();
                 initPeerGame();
             }
@@ -601,12 +563,22 @@ public class MainActivity extends AppCompatActivity {
                         }
                         break;
                     case Finished:  // 종료상태(카운트 다 사용하면, Finished 상태를 리턴함.)
-                        Log.d(TAG, "count 모두 사용, 종료합니다.");
-                        UserCommand cmd = UserCommand.Quit;
-                        executeUserCommand(cmd);                // 종료 커맨드를 실행
-                        System.out.println("Game Finished!");
-                        System.out.println("Your total score : " + myGameModel.totalScore);
-                        //return;
+                        // !!
+                        if(battleMode){ // 배틀모드인 경우에는 Quit 커맨드를 보내는 것이 아니라, 나는 상대방을 기다리고 있다는 것을 알려줘야한다.
+                            myFinishedFlag = true;
+                            if(!echoServer.send(WAITING)){
+                                gameResult = "Connection Error!";
+                                executeUserCommand(UserCommand.Quit);
+                                return;
+                            }
+                        }else {
+                            Log.d(TAG, "count 모두 사용, 종료합니다.");
+                            UserCommand cmd = UserCommand.Quit;
+                            executeUserCommand(cmd);                // 종료 커맨드를 실행
+                            System.out.println("Game Finished!");
+                            System.out.println("Your total score : " + myGameModel.totalScore);
+                            //return;
+                        }
                 }
             }catch (Exception e){
                 e.printStackTrace();
