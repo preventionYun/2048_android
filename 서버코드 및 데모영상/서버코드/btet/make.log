@@ -1,0 +1,47 @@
+g++ -c -o chatsrv.o chatsrv.c -I.
+chatsrv.c: In function ‘int main(int, char**)’:
+chatsrv.c:104:37: error: invalid conversion from ‘void*’ to ‘cmd_params*’ [-fpermissive]
+   params = malloc(sizeof(cmd_params));
+                                     ^
+chatsrv.c:185:31: error: invalid conversion from ‘void*’ to ‘void* (*)(void*)’ [-fpermissive]
+         (void *)&client_sockfd); /* only pass socket id ? */
+                               ^
+In file included from llist2.h:20:0,
+                 from chatsrv.c:36:
+/usr/include/pthread.h:244:12: error:   initializing argument 3 of ‘int pthread_create(pthread_t*, const pthread_attr_t*, void* (*)(void*), void*)’ [-fpermissive]
+ extern int pthread_create (pthread_t *__restrict __newthread,
+            ^
+chatsrv.c: In function ‘int parse_cmd_args(int*, char**)’:
+chatsrv.c:265:14: warning: deprecated conversion from string constant to ‘char*’ [-Wwrite-strings]
+   params->ip = "127.0.0.1";
+              ^
+chatsrv.c: In function ‘void proc_client(int*)’:
+chatsrv.c:334:55: warning: deprecated conversion from string constant to ‘char*’ [-Wwrite-strings]
+        list_entry->client_info->nickname, color_normal);
+                                                       ^
+chatsrv.c: In function ‘void process_msg(char*, int)’:
+chatsrv.c:448:57: warning: deprecated conversion from string constant to ‘char*’ [-Wwrite-strings]
+          list_entry->client_info->nickname, color_normal);
+                                                         ^
+chatsrv.c:492:74: warning: deprecated conversion from string constant to ‘char*’ [-Wwrite-strings]
+       send_broadcast_msg("%s%s%s\r\n", color_yellow, buffer, color_normal);
+                                                                          ^
+chatsrv.c:497:36: warning: deprecated conversion from string constant to ‘char*’ [-Wwrite-strings]
+          color_yellow, color_normal);
+                                    ^
+chatsrv.c:521:55: warning: deprecated conversion from string constant to ‘char*’ [-Wwrite-strings]
+          color_normal, color_red, buffer, color_normal);
+                                                       ^
+chatsrv.c:541:70: warning: deprecated conversion from string constant to ‘char*’ [-Wwrite-strings]
+     send_broadcast_msg("%s%s%s\r\n", color_cyan, buffer, color_normal);
+                                                                      ^
+chatsrv.c:554:48: error: invalid conversion from ‘void*’ to ‘char**’ [-fpermissive]
+     char **nicks = malloc(sizeof(*nicks) * 1000);
+                                                ^
+chatsrv.c:557:45: error: invalid conversion from ‘void*’ to ‘char*’ [-fpermissive]
+       nicks[i] = malloc(sizeof(**nicks) * 30);
+                                             ^
+chatsrv.c:577:31: warning: deprecated conversion from string constant to ‘char*’ [-Wwrite-strings]
+          color_normal, message);
+                               ^
+make: *** [chatsrv.o] Error 1
